@@ -56,7 +56,8 @@ class CardFace:
 
     def decode_step_value(self, step_value):
         """
-        Substitutes saved values in where they are referenced, and changes relative amounts into absolute ones.
+        Returns the provided step value with saved values substituted in where they are referenced,
+        and relative amounts changed into absolute ones.
         If the provided data needs no converting, it will be returned as-is.
 
         Recursively converts sub-values within any dict, list or tuple
@@ -81,7 +82,7 @@ class CardFace:
 
     def _convert_relative_amount(self, amount: dict[str]) -> Union[int, float]:
         """
-        Returns the provided amount converted from relative to absolute units (pixels), so it can be used directly.
+        Returns the provided amount converted into absolute units (pixels), so it can be used directly.
         Requires a target amount which this amount is relative to,
         which may also be relative or reference a saved value
         """
