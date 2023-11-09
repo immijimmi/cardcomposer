@@ -8,5 +8,5 @@ cd ..
 python -m venv ./venv
 venv\Scripts\python -m pip install -r requirements.txt
 
-venv\Scripts\python -m <package folder name>
+venv\Scripts\python -m cardcomposer
 pause
