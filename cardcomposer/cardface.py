@@ -65,7 +65,10 @@ class CardFace:
 
         working_value = step_value
 
-        while (is_saved := self._is_saved_value(working_value)) or (is_relative := self._is_relative_amount(working_value)):
+        while (
+                (is_saved := self._is_saved_value(working_value)) or
+                (is_relative := self._is_relative_amount(working_value))
+        ):
             if is_saved:
                 working_value = self.saved_values[working_value["key"]]
             elif is_relative:
@@ -87,23 +90,24 @@ class CardFace:
         which may also be relative or reference a saved value
         """
 
+        type AmountOperand = Union[Literal["width", "height"], Union[int, float]]
+
         # Required params
-        target: Union[Literal["width", "height"], dict[str], Union[int, float]] = amount["target"]
+        target: AmountOperand = self.decode_step_value(amount["target"])
 
         # Optional params
-        multiplier: Union[int, float] = amount.get("multiplier", 1)
-        offset: Union[int, float] = amount.get("offset", 0)
-        round_to: Union[None, int] = amount.get("round_to", None)
+        multiplier: AmountOperand = self.decode_step_value(amount.get("multiplier", 1))
+        offset: AmountOperand = self.decode_step_value(amount.get("offset", 0))
+        round_to: Union[None, int] = self.decode_step_value(amount.get("round_to", None))
 
-        # Converting the targeted amount into an absolute value first
-        if target == "width":
-            target = self.size[0]
-        elif target == "height":
-            target = self.size[1]
-
-        target: Union[int, float] = self.decode_step_value(target)
-        multiplier: Union[int, float] = self.decode_step_value(multiplier)
-        offset: Union[int, float] = self.decode_step_value(offset)
+        # Operands may also include references to the card face's height or width, these must be resolved
+        operands = [target, multiplier, offset]
+        for index, operand in enumerate(operands):
+            if operand == "width":
+                operands[index] = self.size[0]
+            elif operand == "height":
+                operands[index] = self.size[1]
+        target, multiplier, offset = operands
 
         # Applying calculations
         result = (target * multiplier) + offset
