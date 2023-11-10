@@ -2,6 +2,8 @@ from PIL import Image, ImageOps, ImageDraw
 
 from typing import Optional, Callable, Union, Literal
 
+from .methods import Methods
+
 
 class CardFace:
     def __init__(
@@ -56,6 +58,8 @@ class CardFace:
 
     def decode_step_value(self, step_value):
         """
+        This method should be invoked liberally by step handlers, to decode any values provided in their step data.
+
         Returns the provided step value with saved values substituted in where they are referenced,
         and relative amounts changed into absolute ones.
         If the provided data needs no converting, it will be returned as-is.
@@ -63,7 +67,9 @@ class CardFace:
         Recursively converts sub-values within any dict, list or tuple
         """
 
-        working_value = step_value
+        # To ensure the provided value is not edited in place within this method, a copy is made
+        # Necessary to ensure due to the recursive nature of this method
+        working_value = Methods.try_copy(step_value)
 
         while (
                 (is_saved := self._is_saved_value(working_value)) or
@@ -153,7 +159,7 @@ class CardFace:
     @staticmethod
     def _step_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
-        src: str = step["src"]
+        src: str = card_face.decode_step_value(step["src"])
         position: tuple[int, int] = card_face.decode_step_value(step["position"])
 
         # Optional params
