@@ -1,8 +1,9 @@
 from PIL import Image, ImageOps, ImageDraw
 
-from typing import Optional, Callable, Union, Literal
+from typing import Optional, Callable, Union, Literal, Any
 
 from .methods import Methods
+from .enums import StepKey
 
 
 class CardFace:
@@ -49,8 +50,31 @@ class CardFace:
 
         image = Image.new("RGBA", self.size)
 
-        for step in self.steps:
-            step_type: str = step["type"]
+        # Sorting steps
+        steps_sort_keys: list[dict[str, Any]] = []
+        for step_index, step in enumerate(self.steps):
+            # Optional params
+            """
+            Step priority is used as a primary sorting key for steps, with
+            the initial ordering of the steps used as the secondary key.
+            Any comparable set of values (numbers or not) are valid.
+            If provided priorities are not comparable, priority will not be used at all
+            """
+            step_priority = self.decode_step_value(step.get(StepKey.PRIORITY, None))
+
+            steps_sort_keys.append({"step": step, "index": step_index, "priority": step_priority})
+
+        try:
+            steps_sort_keys.sort(key=lambda step_keys: (step_keys["priority"], step_keys["index"]))
+        except TypeError:  # Unable to sort by priority
+            steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
+
+        ordered_steps = tuple(step_keys["step"] for step_keys in steps_sort_keys)
+        # Executing steps
+        for step in ordered_steps:
+            # Required params
+            step_type: str = self.decode_step_value(step[StepKey.TYPE])
+
             step_handler = self.step_handlers[step_type]
             image = step_handler(image, step, self)
 
