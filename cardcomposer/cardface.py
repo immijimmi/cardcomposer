@@ -215,7 +215,7 @@ class CardFace:
 
                 new_embed_image_size = Methods.round_all((scaled_width, scaled_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
-                embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
+                embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
         if resize_to:
             if (type(resize_to[0]) is bool) and (type(resize_to[1]) is bool):
                 pass  # No numeric value to scale image with has been provided
@@ -236,7 +236,7 @@ class CardFace:
 
                 new_embed_image_size = Methods.round_all((resized_width, resized_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
-                embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
+                embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
 
         paste_box = (
             position[0],
