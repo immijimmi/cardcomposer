@@ -1,6 +1,7 @@
 from PIL import Image, ImageOps, ImageDraw
 
 from typing import Optional, Callable, Union, Literal, Any
+from logging import warning
 
 from .methods import Methods
 from .enums import StepKey, DeferredValue
@@ -101,6 +102,14 @@ class CardFace:
                 working_value = self.saved_values[saved_value_key]
             elif deferred_value == DeferredValue.CALCULATION:
                 working_value = self._resolve_calculation(working_value)
+            elif deferred_value == DeferredValue.CARD_DIMENSION:
+                dimension = self.resolve_deferred_value(working_value["dimension"])
+                if dimension == "width":
+                    working_value = self.size[0]
+                elif dimension == "height":
+                    working_value = self.size[1]
+                else:
+                    raise ValueError(f"invalid dimension name received: {dimension}")
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
 
@@ -145,7 +154,8 @@ class CardFace:
             return
         if "type" not in value:
             return
-        if (value_type:= value["type"]) not in DeferredValue:
+        if (value_type := value["type"]) not in DeferredValue:
+            warning(f"Unrecognised type when evaluating possible deferred value: {value_type}")
             return
         return value_type
 
@@ -165,14 +175,18 @@ class CardFace:
     def _step_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         src: str = card_face.resolve_deferred_value(step["src"])
-        position: tuple[int, int] = card_face.resolve_deferred_value(step["position"])
+        position: tuple[int, int] = Methods.round_all(
+            card_face.resolve_deferred_value(step["position"])
+        )
 
         # Optional params
-        crop: Optional[tuple[int, int, int, int]] = card_face.resolve_deferred_value(step.get("crop", None))
-        scale: tuple[Union[float, bool], Union[float, bool]] = (
+        crop: Optional[tuple[int, int, int, int]] = Methods.round_all(
+            card_face.resolve_deferred_value(step.get("crop", None))
+        )
+        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (  # Only this one does not need rounding
             card_face.resolve_deferred_value(step.get("scale", None))
         )
-        resize_to: tuple[Union[int, bool], Union[int, bool]] = (
+        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = Methods.round_all(
             card_face.resolve_deferred_value(step.get("resize_to", None))
         )
 
@@ -182,45 +196,45 @@ class CardFace:
         if crop:
             embed_image = embed_image.crop(crop)
         if scale:
-            if (scale[0] in (True, False, None)) and (scale[1] in (True, False, None)):
+            if (type(scale[0]) is bool) and (type(scale[1]) is bool):
                 pass  # No numeric value to scale image with has been provided
             else:
-                if scale[0] in (False, None):
+                if scale[0] is False:
                     scaled_width = embed_image.size[0]
                 elif scale[0] is True:
                     scaled_width = embed_image.size[0] * scale[1]
                 else:
                     scaled_width = embed_image.size[0] * scale[0]
 
-                if scale[1] in (False, None):
+                if scale[1] is False:
                     scaled_height = embed_image.size[1]
                 elif scale[1] is True:
                     scaled_height = embed_image.size[1] * scale[0]
                 else:
                     scaled_height = embed_image.size[1] * scale[1]
 
-                new_embed_image_size = (round(scaled_width), round(scaled_height))
+                new_embed_image_size = Methods.round_all((scaled_width, scaled_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
         if resize_to:
-            if (resize_to[0] in (True, False, None)) and (resize_to[1] in (True, False, None)):
+            if (type(resize_to[0]) is bool) and (type(resize_to[1]) is bool):
                 pass  # No numeric value to scale image with has been provided
             else:
-                if resize_to[0] in (False, None):
+                if resize_to[0] is False:
                     resized_width = embed_image.size[0]
                 elif resize_to[0] is True:
                     resized_width = embed_image.size[0] * (resize_to[1]/embed_image.size[1])
                 else:
                     resized_width = resize_to[0]
 
-                if resize_to[1] in (False, None):
+                if resize_to[1] is False:
                     resized_height = embed_image.size[1]
                 elif resize_to[1] is True:
                     resized_height = embed_image.size[1] * (resize_to[0]/embed_image.size[0])
                 else:
                     resized_height = resize_to[1]
 
-                new_embed_image_size = (round(resized_width), round(resized_height))
+                new_embed_image_size = Methods.round_all((resized_width, resized_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
 

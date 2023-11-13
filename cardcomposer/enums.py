@@ -13,3 +13,4 @@ class StepKey(str, Enum):
 class DeferredValue(str, Enum):
     SAVED = "saved"
     CALCULATION = "calculation"
+    CARD_DIMENSION = "card_dimension"
