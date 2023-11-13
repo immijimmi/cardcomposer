@@ -6,9 +6,14 @@
       "title": "Notes"
     },
     {
-      "cards": [],
       "id": "qqlgedz2grcezc5crjqo9jnu",
-      "title": "Ideas"
+      "title": "Ideas",
+      "cards": [
+        {
+          "name": "Step Handler Auto-Documentation",
+          "description": "- Some way to indicate externally which keys will be indexed out of a step by the step hander, and what constraints the relevant values have (required or optional, which keys are exclusive of each other, expected type, possibly an additional docstring per value to indicate more unique constraints)\n  - Should be possible to 'register' this metadata along with storing the step handler itself - perhaps a method which is responsible for indexing both the metadata into a lookup dict on the instance, and also the handler into the existing handlers lookup dict? Then since this metadata is now available to the instance, it could be used to automate retrieval and processing of data from a step before passing it into the step handler - if flagged as 'optional' then perform a `.get()` on the step with the desired default value as also taken from the metadata, if multiple keys are flagged as exclusive of each other then raise an exception if multiple are present etc."
+        }
+      ]
     },
     {
       "cards": [],
@@ -52,6 +57,6 @@
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-09T12:04:20.027Z",
+  "lastEdited": "2023-11-11T07:20:08.502Z",
   "title": "cardcomposer"
 }

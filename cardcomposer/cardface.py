@@ -3,7 +3,8 @@ from PIL import Image, ImageOps, ImageDraw
 from typing import Optional, Callable, Union, Literal, Any
 
 from .methods import Methods
-from .enums import StepKey
+from .enums import StepKey, DeferredValue
+from .constants import Constants
 
 
 class CardFace:
@@ -60,7 +61,7 @@ class CardFace:
             Any comparable set of values (numbers or not) are valid.
             If provided priorities are not comparable, priority will not be used at all
             """
-            step_priority = self.decode_step_value(step.get(StepKey.PRIORITY, None))
+            step_priority = step.get(StepKey.PRIORITY, None)
 
             steps_sort_keys.append({"step": step, "index": step_index, "priority": step_priority})
 
@@ -73,109 +74,89 @@ class CardFace:
         # Executing steps
         for step in ordered_steps:
             # Required params
-            step_type: str = self.decode_step_value(step[StepKey.TYPE])
+            step_type: str = step[StepKey.TYPE]
 
             step_handler = self.step_handlers[step_type]
             image = step_handler(image, step, self)
 
         return image
 
-    def decode_step_value(self, step_value):
+    def resolve_deferred_value(self, value):
         """
         This method should be invoked liberally by step handlers, to decode any values provided in their step data.
 
-        Returns the provided step value with saved values substituted in where they are referenced,
-        and relative amounts changed into absolute ones.
-        If the provided data needs no converting, it will be returned as-is.
+        Responsible for processing any deferred values into a usable form. If the provided data is not a deferred value,
+        it will simply be returned as-is.
 
         Recursively converts sub-values within any dict, list or tuple
         """
 
         # To ensure the provided value is not edited in place within this method, a copy is made
         # Necessary to ensure due to the recursive nature of this method
-        working_value = Methods.try_copy(step_value)
+        working_value = Methods.try_copy(value)
 
-        while (
-                (is_saved := self._is_saved_value(working_value)) or
-                (is_relative := self._is_relative_amount(working_value))
-        ):
-            if is_saved:
-                working_value = self.saved_values[working_value["key"]]
-            elif is_relative:
-                working_value = self._convert_relative_amount(working_value)
+        while deferred_value := self._deferred_value_type(working_value):
+            if deferred_value == DeferredValue.SAVED:
+                saved_value_key = self.resolve_deferred_value(working_value["key"])
+                working_value = self.saved_values[saved_value_key]
+            elif deferred_value == DeferredValue.CALCULATION:
+                working_value = self._resolve_calculation(working_value)
+            else:
+                raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
 
+        # Recursive conversion
         if type(working_value) in (list, tuple):
-            for index, item in enumerate(working_value):
-                working_value[index] = self.decode_step_value(item)
+            old_working_value = working_value
+            working_value = []
+            for item in old_working_value:
+                working_value.append(self.resolve_deferred_value(item))
+            if type(old_working_value) is tuple:
+                working_value = tuple(working_value)
         elif type(working_value) is dict:
             for key, item in working_value.items():
-                working_value[key] = self.decode_step_value(item)
+                working_value[key] = self.resolve_deferred_value(item)
 
         return working_value
 
-    def _convert_relative_amount(self, amount: dict[str]) -> Union[int, float]:
+    def _resolve_calculation(self, calculation: dict[str]):
         """
-        Returns the provided amount converted into absolute units (pixels), so it can be used directly.
-        Requires a target amount which this amount is relative to,
-        which may also be relative or reference a saved value
+        Invokes a single calculation from a limited list of options, passing in the provided operands.
+        The provided operands may themselves be any valid deferred value
+        (further calculations, references to saved values etc.), and are not limited to representing
+        numbers - any types which are valid parameters for the calculation will equally suffice
         """
-
-        type AmountOperand = Union[Literal["width", "height"], Union[int, float]]
 
         # Required params
-        target: AmountOperand = self.decode_step_value(amount["target"])
+        operands: tuple = self.resolve_deferred_value(calculation["operands"])
+        operation_key: str = self.resolve_deferred_value(calculation["operation"])
 
-        # Optional params
-        multiplier: AmountOperand = self.decode_step_value(amount.get("multiplier", 1))
-        offset: AmountOperand = self.decode_step_value(amount.get("offset", 0))
-        round_to: Union[None, int] = self.decode_step_value(amount.get("round_to", None))
-
-        # Operands may also include references to the card face's height or width, these must be resolved
-        operands = [target, multiplier, offset]
-        for index, operand in enumerate(operands):
-            if operand == "width":
-                operands[index] = self.size[0]
-            elif operand == "height":
-                operands[index] = self.size[1]
-        target, multiplier, offset = operands
-
-        # Applying calculations
-        result = (target * multiplier) + offset
-        if round_to is not None:
-            result = round(result, round_to)
-        if round_to == 0:
-            result = int(result)
-
-        return result
+        operation = Constants.CALCULATIONS_LOOKUP[operation_key]
+        return operation(*operands)
 
     @staticmethod
-    def _is_saved_value(value) -> bool:
-        if type(value) is not dict:
-            return False
-        if "type" not in value:
-            return False
-        if value["type"] != "saved":
-            return False
-        return True
+    def _deferred_value_type(value) -> Optional[str]:
+        """
+        If the provided value represents any of a selection of special types which must be further processed
+        to yield usable values, returns the specific type represented.
+        The return value of this method will be truthy only if a deferred value is detected
+        """
 
-    @staticmethod
-    def _is_relative_amount(value) -> bool:
         if type(value) is not dict:
-            return False
+            return
         if "type" not in value:
-            return False
-        if value["type"] != "relative":
-            return False
-        return True
+            return
+        if (value_type:= value["type"]) not in DeferredValue:
+            return
+        return value_type
 
     @staticmethod
     def _step_save_value(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
-        key: str = step["key"]
-        value = step["value"]
+        key = card_face.resolve_deferred_value(step["key"])
+        value = step["value"]  # Value to be stored should remain deferred until needed
 
         # Will not be used, is simply executed to ensure that a valid value has been provided
-        card_face.decode_step_value(value)
+        card_face.resolve_deferred_value(value)
 
         card_face.saved_values[key] = value
         return image
@@ -183,12 +164,17 @@ class CardFace:
     @staticmethod
     def _step_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
-        src: str = card_face.decode_step_value(step["src"])
-        position: tuple[int, int] = card_face.decode_step_value(step["position"])
+        src: str = card_face.resolve_deferred_value(step["src"])
+        position: tuple[int, int] = card_face.resolve_deferred_value(step["position"])
 
         # Optional params
-        crop: Optional[tuple[int, int, int, int]] = card_face.decode_step_value(step.get("crop", None))
-        scale: Optional[float] = card_face.decode_step_value(step.get("scale", None))
+        crop: Optional[tuple[int, int, int, int]] = card_face.resolve_deferred_value(step.get("crop", None))
+        scale: tuple[Union[float, bool], Union[float, bool]] = (
+            card_face.resolve_deferred_value(step.get("scale", None))
+        )
+        resize_to: tuple[Union[int, bool], Union[int, bool]] = (
+            card_face.resolve_deferred_value(step.get("resize_to", None))
+        )
 
         compatibility_layer = Image.new("RGBA", image.size)
         embed_image = Image.open(src)
@@ -196,8 +182,47 @@ class CardFace:
         if crop:
             embed_image = embed_image.crop(crop)
         if scale:
-            scaled_embed_image_size = tuple(round(dimension * scale) for dimension in embed_image.size)
-            embed_image = ImageOps.contain(embed_image, scaled_embed_image_size)
+            if (scale[0] in (True, False, None)) and (scale[1] in (True, False, None)):
+                pass  # No numeric value to scale image with has been provided
+            else:
+                if scale[0] in (False, None):
+                    scaled_width = embed_image.size[0]
+                elif scale[0] is True:
+                    scaled_width = embed_image.size[0] * scale[1]
+                else:
+                    scaled_width = embed_image.size[0] * scale[0]
+
+                if scale[1] in (False, None):
+                    scaled_height = embed_image.size[1]
+                elif scale[1] is True:
+                    scaled_height = embed_image.size[1] * scale[0]
+                else:
+                    scaled_height = embed_image.size[1] * scale[1]
+
+                new_embed_image_size = (round(scaled_width), round(scaled_height))
+                # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
+                embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
+        if resize_to:
+            if (resize_to[0] in (True, False, None)) and (resize_to[1] in (True, False, None)):
+                pass  # No numeric value to scale image with has been provided
+            else:
+                if resize_to[0] in (False, None):
+                    resized_width = embed_image.size[0]
+                elif resize_to[0] is True:
+                    resized_width = embed_image.size[0] * (resize_to[1]/embed_image.size[1])
+                else:
+                    resized_width = resize_to[0]
+
+                if resize_to[1] in (False, None):
+                    resized_height = embed_image.size[1]
+                elif resize_to[1] is True:
+                    resized_height = embed_image.size[1] * (resize_to[0]/embed_image.size[0])
+                else:
+                    resized_height = resize_to[1]
+
+                new_embed_image_size = (round(resized_width), round(resized_height))
+                # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
+                embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
 
         paste_box = (
             position[0],
