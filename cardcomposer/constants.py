@@ -2,6 +2,8 @@ from operator import add, mul, sub, truediv
 
 
 class Constants:
+    DEFERRED_TYPE_KEY = "deferred_type"
+
     CALCULATIONS_LOOKUP = {
         "+": add,
         "*": mul,

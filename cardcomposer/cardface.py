@@ -1,7 +1,8 @@
 from PIL import Image, ImageOps, ImageDraw
 
-from typing import Optional, Callable, Union, Literal, Any
-from logging import warning
+from typing import Optional, Callable, Union, Any
+from os import path
+from pathlib import Path
 
 from .methods import Methods
 from .enums import StepKey, DeferredValue
@@ -15,15 +16,16 @@ class CardFace:
             steps: tuple[dict[str], ...] = ()
     ):
         self.step_handlers: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {
-            "image": self._step_image,
-            "save_value": self._step_save_value
+            "paste_image": self._step_paste_image,
+            "write_to_cache": self._step_write_to_cache,
+            "save": self._step_save
         }
         """
-        Saved values are pieces of re-usable data referencing various aspects of the card face,
-        e.g. the coords of a specific point location on the card. They can be added by specific steps, and may be
+        The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
+        (e.g. the coords of a specific point location on the card). They can be added by specific steps, and may be
         read during any subsequent steps once added
         """
-        self.saved_values: dict[str] = {}
+        self.cache: dict[str] = {}
 
         self.label = label
         self.template = template
@@ -47,8 +49,8 @@ class CardFace:
             self.size = (*size,)
             self.steps = (*steps,)
 
-    def generate_image(self) -> Image.Image:
-        self.saved_values.clear()
+    def generate(self) -> Image.Image:
+        self.cache.clear()
 
         image = Image.new("RGBA", self.size)
 
@@ -96,10 +98,11 @@ class CardFace:
         # Necessary to ensure due to the recursive nature of this method
         working_value = Methods.try_copy(value)
 
+        # Resolve deferred values in a loop until the remaining value is not a deferred value
         while deferred_value := self._deferred_value_type(working_value):
-            if deferred_value == DeferredValue.SAVED:
-                saved_value_key = self.resolve_deferred_value(working_value["key"])
-                working_value = self.saved_values[saved_value_key]
+            if deferred_value == DeferredValue.CACHED:
+                cache_key = self.resolve_deferred_value(working_value["key"])
+                working_value = self.cache[cache_key]
             elif deferred_value == DeferredValue.CALCULATION:
                 working_value = self._resolve_calculation(working_value)
             elif deferred_value == DeferredValue.CARD_DIMENSION:
@@ -131,7 +134,7 @@ class CardFace:
         """
         Invokes a single calculation from a limited list of options, passing in the provided operands.
         The provided operands may themselves be any valid deferred value
-        (further calculations, references to saved values etc.), and are not limited to representing
+        (further calculations, references to cached values etc.), and are not limited to representing
         numbers - any types which are valid parameters for the calculation will equally suffice
         """
 
@@ -152,15 +155,14 @@ class CardFace:
 
         if type(value) is not dict:
             return
-        if "type" not in value:
+        if Constants.DEFERRED_TYPE_KEY not in value:
             return
-        if (value_type := value["type"]) not in DeferredValue:
-            warning(f"Unrecognised type when evaluating possible deferred value: {value_type}")
-            return
+        if (value_type := value[Constants.DEFERRED_TYPE_KEY]) not in DeferredValue:
+            raise TypeError(f"unrecognised type when evaluating deferred value: {value_type}")
         return value_type
 
     @staticmethod
-    def _step_save_value(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def _step_write_to_cache(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         key = card_face.resolve_deferred_value(step["key"])
         value = step["value"]  # Value to be stored should remain deferred until needed
@@ -168,11 +170,11 @@ class CardFace:
         # Will not be used, is simply executed to ensure that a valid value has been provided
         card_face.resolve_deferred_value(value)
 
-        card_face.saved_values[key] = value
+        card_face.cache[key] = value
         return image
 
     @staticmethod
-    def _step_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def _step_paste_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         src: str = card_face.resolve_deferred_value(step["src"])
         position: tuple[int, int] = Methods.round_all(
@@ -183,10 +185,10 @@ class CardFace:
         crop: Optional[tuple[int, int, int, int]] = Methods.round_all(
             card_face.resolve_deferred_value(step.get("crop", None))
         )
-        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (  # Only this one does not need rounding
+        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
             card_face.resolve_deferred_value(step.get("scale", None))
         )
-        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = Methods.round_all(
+        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
             card_face.resolve_deferred_value(step.get("resize_to", None))
         )
 
@@ -247,4 +249,18 @@ class CardFace:
         compatibility_layer.paste(embed_image, paste_box)
 
         image = Image.alpha_composite(image, compatibility_layer)
+        return image
+
+    @staticmethod
+    def _step_save(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+        # Optional params
+        file_path: str = card_face.resolve_deferred_value(step.get("path", "Cards"))
+        filename: str = card_face.resolve_deferred_value(step.get("filename", card_face.label or "card"))
+        extension: str = card_face.resolve_deferred_value(step.get("extension", ".tif"))
+
+        full_path = path.join(file_path, filename + extension)
+
+        Path(file_path).mkdir(parents=True, exist_ok=True)
+        image.save(full_path)
+
         return image
