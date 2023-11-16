@@ -2,7 +2,7 @@ from operator import add, mul, sub, truediv
 
 
 class Constants:
-    DEFERRED_TYPE_KEY = "deferred_type"
+    DEFERRED_TYPE_KEY = "deferred"
 
     CALCULATIONS_LOOKUP = {
         "+": add,
