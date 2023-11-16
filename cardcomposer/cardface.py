@@ -132,15 +132,15 @@ class CardFace:
 
     def _resolve_calculation(self, calculation: dict[str]):
         """
-        Invokes a single calculation from a limited list of options, passing in the provided operands.
-        The provided operands may themselves be any valid deferred value
+        Invokes a single calculation from a limited list of options, passing in the provided arguments.
+        The provided arguments may themselves be any valid deferred value
         (further calculations, references to cached values etc.), and are not limited to representing
         numbers - any types which are valid parameters for the calculation will equally suffice
         """
 
         # Required params
-        operands: tuple = self.resolve_deferred_value(calculation["operands"])
-        operation_key: str = self.resolve_deferred_value(calculation["operation"])
+        operands: tuple = self.resolve_deferred_value(calculation["args"])
+        operation_key: str = self.resolve_deferred_value(calculation["op"])
 
         operation = Constants.CALCULATIONS_LOOKUP[operation_key]
         return operation(*operands)
