@@ -15,20 +15,20 @@ class Methods:
             return item
 
     @staticmethod
-    def ensure_ints(numbers: tuple[Union[float, int], ...]) -> tuple[int, ...]:
+    def ensure_ints(numbers: Union[tuple[Union[float, int], ...], Any]) -> Union[tuple[int, ...], Any]:
         """
         Used to ensure a number sequence contains only integers, in cases where:
         - Integer values are a requirement
         - Losing float precision is acceptable
 
-        If the provided data is not a tuple or list of numbers, will raise an exception
+        If the provided data is not a tuple or list of only numbers, it will be returned as-is
         """
 
         if type(numbers) not in (tuple, list):
-            raise TypeError(f"unable to process value (is not tuple or list): {numbers}")
+            return numbers
 
         for number in numbers:
             if type(number) not in (float, int):
-                raise TypeError(f"unable to process value (is not float or int): {number}")
+                return numbers
 
         return tuple(round(number) for number in numbers)
