@@ -12,5 +12,6 @@ class Constants:
         "round": round,
         "sum": sum,
         "min": min,
-        "max": max
+        "max": max,
+        "index": (lambda container, key: container[key])
     }
