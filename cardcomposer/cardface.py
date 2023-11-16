@@ -177,12 +177,12 @@ class CardFace:
     def _step_paste_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         src: str = card_face.resolve_deferred_value(step["src"])
-        position: tuple[int, int] = Methods.round_all(
+        position: tuple[int, int] = Methods.ensure_ints(
             card_face.resolve_deferred_value(step["position"])
         )
 
         # Optional params
-        crop: Optional[tuple[int, int, int, int]] = Methods.round_all(
+        crop: Optional[tuple[int, int, int, int]] = Methods.ensure_ints(
             card_face.resolve_deferred_value(step.get("crop", None))
         )
         scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
@@ -215,7 +215,7 @@ class CardFace:
                 else:
                     scaled_height = embed_image.size[1] * scale[1]
 
-                new_embed_image_size = Methods.round_all((scaled_width, scaled_height))
+                new_embed_image_size = Methods.ensure_ints((scaled_width, scaled_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
         if resize_to:
@@ -236,7 +236,7 @@ class CardFace:
                 else:
                     resized_height = resize_to[1]
 
-                new_embed_image_size = Methods.round_all((resized_width, resized_height))
+                new_embed_image_size = Methods.ensure_ints((resized_width, resized_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
 
