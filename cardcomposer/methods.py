@@ -15,20 +15,20 @@ class Methods:
             return item
 
     @staticmethod
-    def round_all(numbers):
+    def ensure_ints(numbers: tuple[Union[float, int], ...]) -> tuple[int, ...]:
         """
-        Attempts to round all numbers in the provided sequence to int values, returning them as a new sequence.
-        Fails quietly - if unable to round a value, it is returned as-is within its place in the sequence
+        Used to ensure a number sequence contains only integers, in cases where:
+        - Integer values are a requirement
+        - Losing float precision is acceptable
+
+        If the provided data is not a tuple or list of numbers, will raise an exception
         """
 
-        result = []
-        try:
-            for num in numbers:
-                try:
-                    result.append(round(num))
-                except TypeError:
-                    result.append(num)
+        if type(numbers) not in (tuple, list):
+            raise TypeError(f"unable to process value (is not tuple or list): {numbers}")
 
-            return result
-        except TypeError:
-            return numbers
+        for number in numbers:
+            if type(number) not in (float, int):
+                raise TypeError(f"unable to process value (is not float or int): {number}")
+
+        return tuple(round(number) for number in numbers)

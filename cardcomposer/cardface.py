@@ -117,7 +117,7 @@ class CardFace:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
 
         # Recursive conversion
-        if type(working_value) in (list, tuple):
+        if type(working_value) in (tuple, list):
             old_working_value = working_value
             working_value = []
             for item in old_working_value:
