@@ -3,6 +3,7 @@ from PIL import Image, ImageOps, ImageDraw
 from typing import Optional, Callable, Union, Any
 from os import path
 from pathlib import Path
+from logging import info, warning, debug
 
 from .methods import Methods
 from .enums import StepKey, DeferredValue
@@ -42,7 +43,7 @@ class CardFace:
         else:
             if not size:
                 raise ValueError(
-                    f"no template and no size provided for initialisation of {CardFace.__name__} object."
+                    f"no template and no size provided for initialisation of {type(self).__name__} object."
                     " At least one must be provided"
                 )
 
@@ -51,7 +52,9 @@ class CardFace:
 
     def generate(self) -> Image.Image:
         self.cache.clear()
+        debug(f"{type(self).__name__} cache cleared.")
 
+        info(f"Generating new {type(self).__name__} image...")
         image = Image.new("RGBA", self.size)
 
         # Sorting steps
@@ -70,7 +73,9 @@ class CardFace:
 
         try:
             steps_sort_keys.sort(key=lambda step_keys: (step_keys["priority"], step_keys["index"]))
+            info(f"Sorted {type(self).__name__} steps.")
         except TypeError:  # Unable to sort by priority
+            debug(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
         ordered_steps = tuple(step_keys["step"] for step_keys in steps_sort_keys)
@@ -78,10 +83,13 @@ class CardFace:
         for step in ordered_steps:
             # Required params
             step_type: str = step[StepKey.TYPE]
+            debug(f"Processing {type(self).__name__} step: {step_type}")
 
             step_handler = self.step_handlers[step_type]
             image = step_handler(image, step, self)
+            info(f"{type(self).__name__} step ({step_type}) completed.")
 
+        info(f"{type(self).__name__} image successfully generated.")
         return image
 
     def resolve_deferred_value(self, value):
