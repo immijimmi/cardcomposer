@@ -21,32 +21,37 @@ class App:
 
                 label: Optional[str] = single_card_data.get("label")
                 size: Optional[tuple[int, int]] = single_card_data.get("size")
-                steps: tuple[dict[str], ...] = single_card_data.get("steps")
+                steps: tuple[dict[str], ...] = single_card_data.get("steps", ())
+                is_template: bool = single_card_data.get("is_template", False)
 
-                template_label: Optional[str] = single_card_data.get("template")
-                if template_label is None:
-                    cardface = CardFace(label=label, size=size, steps=steps)
+                templates_labels: Optional[tuple[str]] = single_card_data.get("templates", ())
 
-                    processed_this_loop += 1
-                    cardfaces.append(cardface)
-                    if cardface.label is not None:
-                        template_lookup.setdefault(cardface.label, []).append(cardface)
-                else:
+                templates = []
+                for template_label in templates_labels:
                     matching_templates = template_lookup.get(template_label, [])
-                    if len(matching_templates) == 0:  # No matching template found for this card
+
+                    if len(matching_templates) == 0:  # No matching template found for this label
                         cards_data.append(single_card_data)  # Defer processing incase template has not yet been made
+                        break
                     elif len(matching_templates) > 1:
                         raise RuntimeError(
                             f"unable to resolve {CardFace.__name__} template"
-                            " - multiple matching templates found under label: {template_label}"
+                            f" - multiple matching templates found under label: {template_label}"
                         )
                     else:
-                        cardface = CardFace(label=label, size=size, steps=steps, template=matching_templates[0])
+                        templates.append(matching_templates[0])
 
-                        processed_this_loop += 1
-                        cardfaces.append(cardface)
-                        if cardface.label is not None:
-                            template_lookup.setdefault(cardface.label, []).append(cardface)
+                if len(templates) == len(templates_labels):  # All templates resolved
+                    cardface = CardFace(
+                        label=label, size=size,
+                        steps=steps, templates=templates,
+                        is_template=is_template
+                    )
+
+                    processed_this_loop += 1
+                    cardfaces.append(cardface)
+                    if cardface.is_template and (cardface.label is not None):
+                        template_lookup.setdefault(cardface.label, []).append(cardface)
 
             if processed_this_loop == 0:  # Presumably all deferred due to missing templates
                 raise RuntimeError(
@@ -55,4 +60,5 @@ class App:
                 )
 
         for cardface in cardfaces:
-            cardface.generate()
+            if not cardface.is_template:
+                cardface.generate()

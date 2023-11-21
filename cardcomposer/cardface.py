@@ -1,6 +1,6 @@
 from PIL import Image, ImageOps, ImageDraw
 
-from typing import Optional, Callable, Union, Any
+from typing import Optional, Callable, Union, Any, Sequence
 from os import path
 from pathlib import Path
 from logging import info, warning, debug
@@ -13,8 +13,8 @@ from .constants import Constants
 class CardFace:
     def __init__(
             self, label: Optional[str] = None,
-            template: Optional["CardFace"] = None, size: Optional[tuple[int, int]] = None,
-            steps: tuple[dict[str], ...] = ()
+            templates: Sequence["CardFace"] = (), size: Optional[tuple[int, int]] = None,
+            steps: Sequence[dict[str]] = (), is_template: bool = False
     ):
         self.step_handlers: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {
             "paste_image": self._step_paste_image,
@@ -29,28 +29,24 @@ class CardFace:
         self.cache: dict[str] = {}
 
         self.label = label
-        self.template = template
+        self.templates = tuple(templates)
+        self.is_template = is_template
 
-        self.size: tuple[int, int]
-        self.steps: tuple[dict[str], ...]
-        if template:
-            if size:
-                self.size = size
-            else:
-                self.size = template.size
-
-            self.steps = (*template.steps, *steps)
+        self.size: Optional[tuple[int, int]] = None
+        if size:
+            self.size = tuple(size)
         else:
-            if not size:
-                raise ValueError(
-                    f"no template and no size provided for initialisation of {type(self).__name__} object."
-                    " At least one must be provided"
-                )
+            for template in self.templates:  # Go through templates in order, to search for a size value to use
+                if template.size:
+                    self.size = tuple(template.size)
+                    break
 
-            self.size = (*size,)
-            self.steps = (*steps,)
+        self.steps = (*(step for template in templates for step in template.steps), *steps)
 
     def generate(self) -> Image.Image:
+        if not self.size:
+            raise ValueError(f"unable to generate image from {type(self).__name__} (no size set)")
+
         self.cache.clear()
         debug(f"{type(self).__name__} cache cleared.")
 
