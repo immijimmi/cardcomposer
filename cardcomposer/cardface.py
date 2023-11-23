@@ -195,6 +195,9 @@ class CardFace:
         resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
             card_face.resolve_deferred_value(step.get("resize_to", None))
         )
+        opacity: Optional[float] = (
+            card_face.resolve_deferred_value(step.get("opacity", None))
+        )
 
         compatibility_layer = Image.new("RGBA", image.size)
         embed_image = Image.open(src)
@@ -243,6 +246,9 @@ class CardFace:
                 new_embed_image_size = Methods.ensure_ints((resized_width, resized_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
+        if opacity is not None:
+            blank_image = Image.new(mode="RGBA", size=embed_image.size)
+            embed_image = Image.blend(blank_image, embed_image, alpha=opacity)
 
         paste_box = (
             position[0],
