@@ -14,3 +14,4 @@ class DeferredValue(str, Enum):
     CACHED = "cached"
     CALCULATION = "calc"
     CARD_DIMENSION = "card_dim"
+    SEEDED_RANDOM = "seeded"

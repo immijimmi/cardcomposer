@@ -4,6 +4,7 @@ from typing import Optional, Callable, Union, Any, Sequence
 from os import path
 from pathlib import Path
 from logging import info, warning, debug
+import random
 
 from .methods import Methods
 from .enums import StepKey, DeferredValue
@@ -117,6 +118,10 @@ class CardFace:
                     working_value = self.size[1]
                 else:
                     raise ValueError(f"invalid dimension name received: {dimension}")
+            elif deferred_value == DeferredValue.SEEDED_RANDOM:
+                seed = self.resolve_deferred_value(working_value["seed"])
+                random.seed(seed)
+                working_value = random.random()
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
 
