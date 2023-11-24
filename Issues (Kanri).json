@@ -51,10 +51,6 @@
         {
           "description": "- Step which prints text on a card face\n- Should require a point location, font, size & color",
           "name": "#1 - Text Step"
-        },
-        {
-          "description": "",
-          "name": "#8 - Allow Multiple Templates for CardFace"
         }
       ],
       "id": "s3svm1k7ljtf51in0uzs23xi",
@@ -71,12 +67,17 @@
       "title": "Doing"
     },
     {
-      "cards": [],
+      "cards": [
+        {
+          "description": "",
+          "name": "#8 - Allow Multiple Templates for CardFace"
+        }
+      ],
       "id": "t989tdx1pj14i8am5hyftqvd",
       "title": "Done"
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-20T14:11:54.173Z",
+  "lastEdited": "2023-11-21T06:47:25.096Z",
   "title": "cardcomposer"
 }

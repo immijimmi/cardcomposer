@@ -171,10 +171,24 @@ class CardFace:
         key = card_face.resolve_deferred_value(step["key"])
         value = step["value"]  # Value to be stored should remain deferred until needed
 
+        # Optional params
+        mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
+
         # Will not be used, is simply executed to ensure that a valid value has been provided
         card_face.resolve_deferred_value(value)
 
+        if mode == "add":
+            if key in card_face.cache:
+                raise ValueError(f"key already exists in {type(card_face).__name__} cache: {key}")
+        elif mode == "update":
+            if key not in card_face.cache:
+                raise KeyError(f"key not found in {type(card_face).__name__} cache: {key}")
+        elif mode == "add_or_update":
+            pass
+        else:
+            raise ValueError(f"unrecognised write mode: {mode}")
         card_face.cache[key] = value
+
         return image
 
     @staticmethod
