@@ -31,6 +31,7 @@ class CardFace:
 
         self.label = label
         self.templates = tuple(templates)
+        self.steps = tuple(steps)
         self.is_template = is_template
 
         self.size: Optional[tuple[int, int]] = None
@@ -42,7 +43,25 @@ class CardFace:
                     self.size = tuple(template.size)
                     break
 
-        self.steps = (*(step for template in templates for step in template.steps), *steps)
+        self.cumulative_templates = (
+            *(sub_template for template in templates for sub_template in template.cumulative_templates),
+            *self.templates
+        )
+        self.cumulative_steps = (
+            *(step for template in templates for step in template.cumulative_steps),
+            *self.steps
+        )
+
+        # Validating templates, to prevent a template being passed in at multiple points and duplicating its steps
+        cumulative_templates_labels = set()
+        for template in self.cumulative_templates:
+            if template.label in cumulative_templates_labels:
+                raise ValueError(
+                    f"two templates with the same label ({template.label})"
+                    f" passed to {type(self).__name__} object."
+                    f" {type(self).__name__} object label: {self.label}"
+                )
+            cumulative_templates_labels.add(template.label)
 
     def generate(self) -> Image.Image:
         if not self.size:
@@ -56,7 +75,7 @@ class CardFace:
 
         # Sorting steps
         steps_sort_keys: list[dict[str, Any]] = []
-        for step_index, step in enumerate(self.steps):
+        for step_index, step in enumerate(self.cumulative_steps):
             # Optional params
             """
             Step priority is used as a primary sorting key for steps, with
