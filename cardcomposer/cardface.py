@@ -131,20 +131,26 @@ class CardFace:
                 working_value = self._resolve_calculation(working_value)
 
             elif deferred_value == DeferredValue.SEEDED_RANDOM:
-                # Required values
+                # Required params
                 seed = self.resolve_deferred_value(working_value["seed"])
 
+                # Optional params
+                n: int = self.resolve_deferred_value(working_value.get("n", 0))
+
                 random.seed(seed)
+                for prior_roll in range(n):
+                    random.random()
+
                 working_value = random.random()
 
             elif deferred_value == DeferredValue.CACHED:
-                # Required values
+                # Required params
                 cache_key = self.resolve_deferred_value(working_value["key"])
 
                 working_value = self.cache[cache_key]
 
             elif deferred_value == DeferredValue.CARD_DIMENSION:
-                # Required values
+                # Required params
                 dimension: str = self.resolve_deferred_value(working_value["dimension"])
 
                 if dimension == "width":
@@ -155,11 +161,10 @@ class CardFace:
                     raise ValueError(f"invalid dimension name received: {dimension}")
 
             elif deferred_value == DeferredValue.IMAGE:
-                # Required values
+                # Required params
                 src: str = self.resolve_deferred_value(working_value["src"])
 
-                with Image.open(src) as image_file:
-                    working_value = image_file.load()
+                working_value = Image.open(src)
 
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
