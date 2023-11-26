@@ -11,10 +11,13 @@ class StepKey(str, Enum):
 
 
 class DeferredValue(str, Enum):
-    CACHED = "cached"
+    SELF = "self"
     CALCULATION = "calc"
-    CARD_DIMENSION = "card_dim"
     SEEDED_RANDOM = "seeded"
+
+    # Shortcut values
+    CACHED = "cached"
+    CARD_DIMENSION = "card_dim"
 
     # PIL-specific values
     IMAGE = "image"

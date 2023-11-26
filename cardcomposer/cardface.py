@@ -124,14 +124,24 @@ class CardFace:
 
         # Resolve deferred values in a loop until the remaining value is not a deferred value
         while deferred_value := self._deferred_value_type(working_value):
-            if deferred_value == DeferredValue.CACHED:
+            if deferred_value == DeferredValue.SELF:
+                working_value = self
+
+            elif deferred_value == DeferredValue.CALCULATION:
+                working_value = self._resolve_calculation(working_value)
+
+            elif deferred_value == DeferredValue.SEEDED_RANDOM:
+                # Required values
+                seed = self.resolve_deferred_value(working_value["seed"])
+
+                random.seed(seed)
+                working_value = random.random()
+
+            elif deferred_value == DeferredValue.CACHED:
                 # Required values
                 cache_key = self.resolve_deferred_value(working_value["key"])
 
                 working_value = self.cache[cache_key]
-
-            elif deferred_value == DeferredValue.CALCULATION:
-                working_value = self._resolve_calculation(working_value)
 
             elif deferred_value == DeferredValue.CARD_DIMENSION:
                 # Required values
@@ -143,13 +153,6 @@ class CardFace:
                     working_value = self.size[1]
                 else:
                     raise ValueError(f"invalid dimension name received: {dimension}")
-
-            elif deferred_value == DeferredValue.SEEDED_RANDOM:
-                # Required values
-                seed = self.resolve_deferred_value(working_value["seed"])
-
-                random.seed(seed)
-                working_value = random.random()
 
             elif deferred_value == DeferredValue.IMAGE:
                 # Required values
@@ -214,9 +217,10 @@ class CardFace:
 
         # Optional params
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
+        is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
 
-        # Will not be used, is simply executed to ensure that a valid value has been provided
-        card_face.resolve_deferred_value(value)
+        if not is_lazy:  # Resolve value now rather than waiting until it is needed
+            value = card_face.resolve_deferred_value(value)
 
         if mode == "add":
             if key in card_face.cache:
