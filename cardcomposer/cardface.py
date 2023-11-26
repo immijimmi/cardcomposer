@@ -1,9 +1,9 @@
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageFont, ImageDraw
 
 from typing import Optional, Callable, Union, Any, Sequence
 from os import path
 from pathlib import Path
-from logging import info, warning, debug
+from logging import info, debug
 import random
 
 from .methods import Methods
@@ -165,6 +165,36 @@ class CardFace:
                 src: str = self.resolve_deferred_value(working_value["src"])
 
                 working_value = Image.open(src)
+
+            elif deferred_value == DeferredValue.FONT:
+                # Required params
+                src: str = self.resolve_deferred_value(working_value["src"])
+
+                # Optional params
+                font_type: str = self.resolve_deferred_value(working_value.get("type", "truetype"))
+                size: Optional[int] = self.resolve_deferred_value(working_value.get("size", None))
+                index: Optional[int] = self.resolve_deferred_value(working_value.get("index", None))
+                encoding: Optional[str] = self.resolve_deferred_value(working_value.get("encoding", None))
+
+                truetype_kwargs = {
+                    "size": size,
+                    "index": index,
+                    "encoding": encoding
+                }
+                if font_type == "truetype":
+                    kwargs = {
+                        key: value for key, value in truetype_kwargs.items() if value is not None
+                    }
+                    working_value = ImageFont.truetype(font=src, **kwargs)
+                elif font_type == "bitmap":
+                    if any(value is not None for value in truetype_kwargs.values()):
+                        raise ValueError(
+                            f"truetype-specific font arg(s) provided for bitmap font type: {truetype_kwargs}"
+                        )
+
+                    working_value = ImageFont.load(src)
+                else:
+                    raise ValueError(f"invalid font type: {font_type}")
 
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")

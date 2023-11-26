@@ -21,3 +21,4 @@ class DeferredValue(str, Enum):
 
     # PIL-specific values
     IMAGE = "image"
+    FONT = "font"
