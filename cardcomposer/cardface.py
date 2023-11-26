@@ -125,22 +125,39 @@ class CardFace:
         # Resolve deferred values in a loop until the remaining value is not a deferred value
         while deferred_value := self._deferred_value_type(working_value):
             if deferred_value == DeferredValue.CACHED:
+                # Required values
                 cache_key = self.resolve_deferred_value(working_value["key"])
+
                 working_value = self.cache[cache_key]
+
             elif deferred_value == DeferredValue.CALCULATION:
                 working_value = self._resolve_calculation(working_value)
+
             elif deferred_value == DeferredValue.CARD_DIMENSION:
-                dimension = self.resolve_deferred_value(working_value["dimension"])
+                # Required values
+                dimension: str = self.resolve_deferred_value(working_value["dimension"])
+
                 if dimension == "width":
                     working_value = self.size[0]
                 elif dimension == "height":
                     working_value = self.size[1]
                 else:
                     raise ValueError(f"invalid dimension name received: {dimension}")
+
             elif deferred_value == DeferredValue.SEEDED_RANDOM:
+                # Required values
                 seed = self.resolve_deferred_value(working_value["seed"])
+
                 random.seed(seed)
                 working_value = random.random()
+
+            elif deferred_value == DeferredValue.IMAGE:
+                # Required values
+                src: str = self.resolve_deferred_value(working_value["src"])
+
+                with Image.open(src) as image_file:
+                    working_value = image_file.load()
+
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
 
@@ -218,7 +235,7 @@ class CardFace:
     @staticmethod
     def _step_paste_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
-        src: str = card_face.resolve_deferred_value(step["src"])
+        embed_image: Image.Image = card_face.resolve_deferred_value(step["image"])
         position: tuple[int, int] = Methods.ensure_ints(
             card_face.resolve_deferred_value(step["position"])
         )
@@ -238,10 +255,10 @@ class CardFace:
         )
 
         compatibility_layer = Image.new("RGBA", image.size)
-        embed_image = Image.open(src)
 
         if crop:
             embed_image = embed_image.crop(crop)
+
         if scale:
             if (type(scale[0]) is bool) and (type(scale[1]) is bool):
                 pass  # No numeric value to scale image with has been provided
@@ -263,6 +280,7 @@ class CardFace:
                 new_embed_image_size = Methods.ensure_ints((scaled_width, scaled_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
+
         if resize_to:
             if (type(resize_to[0]) is bool) and (type(resize_to[1]) is bool):
                 pass  # No numeric value to scale image with has been provided
@@ -284,6 +302,7 @@ class CardFace:
                 new_embed_image_size = Methods.ensure_ints((resized_width, resized_height))
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
+
         if opacity is not None:
             blank_image = Image.new(mode="RGBA", size=embed_image.size)
             embed_image = Image.blend(blank_image, embed_image, alpha=opacity)

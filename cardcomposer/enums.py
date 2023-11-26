@@ -15,3 +15,6 @@ class DeferredValue(str, Enum):
     CALCULATION = "calc"
     CARD_DIMENSION = "card_dim"
     SEEDED_RANDOM = "seeded"
+
+    # PIL-specific values
+    IMAGE = "image"
