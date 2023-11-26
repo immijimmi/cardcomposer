@@ -6,6 +6,8 @@
       "title": "Notes"
     },
     {
+      "id": "qqlgedz2grcezc5crjqo9jnu",
+      "title": "Ideas",
       "cards": [
         {
           "description": "- Any exceptions thrown due to incorrect step data should indicate where in the data the problem occurred. Preferably as specifically as possible, but more importantly done in a way that does not require constant maintenance.\n  - With that in mind, possibly a try/except around `image = step(image, step, self)` which then catches and re-throws the exception with the additional information that the exception was due to incorrect step data\n  - Alternatively, are there any generic data validation libraries that could be worked with?",
@@ -14,14 +16,8 @@
         {
           "description": "- Some way to indicate externally which keys will be indexed out of a step by the step hander, and what constraints the relevant values have (required or optional, which keys are exclusive of each other, expected type, possibly an additional docstring per value to indicate more unique constraints)\n  - Should be possible to 'register' this metadata along with storing the step handler itself - perhaps a method which is responsible for indexing both the metadata into a lookup dict on the instance, and also the handler into the existing handlers lookup dict? Then since this metadata is now available to the instance, it could be used to automate retrieval and processing of data from a step before passing it into the step handler - if flagged as 'optional' then perform a `.get()` on the step with the desired default value as also taken from the metadata, if multiple keys are flagged as exclusive of each other then raise an exception if multiple are present etc.",
           "name": "#3 - Step Handler Auto-Documentation"
-        },
-        {
-          "description": "- Allow a seed value (either directly provided or cached for reuse) to be used to determine pseudo random rolls\n  - Can be used to 'randomly' but still deterministically select variations of images to apply to card faces; In other words, with the same seed, rolls will output the same sequence, but this sequence is 'random'. This means that assuming random values are requested in the same parts of the JSON input, the exact same 'randomly' selected variations should be applied to each card each time the application is run. Allows for diversity while still keeping the end result predictable",
-          "name": "(Blocked by #4) #7 - Seeded Random Value Generation"
         }
-      ],
-      "id": "qqlgedz2grcezc5crjqo9jnu",
-      "title": "Ideas"
+      ]
     },
     {
       "cards": [],
@@ -29,32 +25,36 @@
       "title": "Issues"
     },
     {
+      "id": "kpk0wn7cyclskdefovgk84pm",
+      "title": "Icebox",
       "cards": [
         {
-          "description": "Extend the deferred values system used within CardFace to be usable globally, so that params passed into CardFace can be deferred values.\n\nNot all aspects of the logic currently used within CardFace are applicable globally (e.g. DeferredValue.CARD_DIMENSION makes no sense outside of the scope of a CardFace instance) so this will need to be considered when implementing the refactor.\n\n- Possible implementation: `template_pool={}` param, and change `template` param into a str param. Move <template str label -> CardFace> conversion from __main__ into the constructor accordingly. Because the default arg here is mutable, by default the template pool will be accessible to all CardFace objects.\nFor convenience also make a `template_pool` property on CardFace so that whatever pool is in use by an instance is accessible externally\n- Once this is implemented, add a new step that simply stores the current CardFace instance in the template pool, and remove that logic from App",
+          "description": "Extend the deferred values system used within CardFace to be usable globally, so that other params passed into CardFace can themselves be deferred values.\n\nNot all aspects of the logic currently used within CardFace are applicable globally (e.g. DeferredValue.CARD_DIMENSION makes no sense outside of the scope of a CardFace instance) so this will need to be considered when implementing the refactor.\n\n- Possible alternative implementation that allows some external data to be accessible: `template_pool={}` param, and change `template` param into a str param. Move <template str label -> CardFace> conversion from __main__ into the constructor accordingly. Because the default arg here is mutable, by default the template pool will be accessible to all CardFace objects.\nFor convenience also make a `template_pool` property on CardFace so that whatever pool is in use by an instance is accessible externally\n- Once this is implemented, add a new step that simply stores the current CardFace instance in the template pool, and remove that logic from App",
           "name": "#4 - Deferred Values at Global Level"
         },
         {
           "description": "- Possibly make a new DeferredValue for this, that way other steps can also use nested CardFace objects to generate sub-images if needed\n  - In order to allow the nested CardFace to receive a template, it will need to have access to a global level cache (see card #4)",
-          "name": "(Blocked by #4) #5 - Allow Image Step To Use a Nested CardFace Object To Generate Its Image"
+          "name": "#5 (Blocked by #4) - Allow Image Step To Use a Nested CardFace Object To Generate Its Image"
         },
         {
           "description": "- If label is no longer used to store templates (once template step is added) and is not strictly necessary to save image, it may possibly be removed\n  - Consider whether it is better to remove it and require strings to be passed into each of these steps, or whether to keep and make it mandatory in both steps to standardise its usage as an identifier\n    - Should the image filename be required to be the same as the template name for a CardFace?",
-          "name": "(Blocked by #5) #6 - Look Into Deprecating Label Param"
+          "name": "#6 (Blocked by #5) - Look Into Deprecating Label Param"
         }
-      ],
-      "id": "kpk0wn7cyclskdefovgk84pm",
-      "title": "Icebox"
+      ]
     },
     {
+      "id": "s3svm1k7ljtf51in0uzs23xi",
+      "title": "Backlog",
       "cards": [
         {
           "description": "- Step which prints text on a card face\n- Should require a point location, font, size & color",
           "name": "#1 - Text Step"
+        },
+        {
+          "name": "#9 - Manifest File To Allow Splitting Cards Data Into Multiple Files",
+          "description": ""
         }
-      ],
-      "id": "s3svm1k7ljtf51in0uzs23xi",
-      "title": "Backlog"
+      ]
     },
     {
       "cards": [],
@@ -71,6 +71,10 @@
         {
           "description": "",
           "name": "#8 - Allow Multiple Templates for CardFace"
+        },
+        {
+          "description": "- Allow a seed value (either directly provided or cached for reuse) to be used to determine pseudo random rolls\n  - Can be used to 'randomly' but still deterministically select variations of images to apply to card faces; In other words, with the same seed, rolls will output the same sequence, but this sequence is 'random'. This means that assuming random values are requested in the same parts of the JSON input, the exact same 'randomly' selected variations should be applied to each card each time the application is run. Allows for diversity while still keeping the end result predictable",
+          "name": "#7 - Seeded Random Value Generation"
         }
       ],
       "id": "t989tdx1pj14i8am5hyftqvd",
@@ -78,6 +82,6 @@
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-21T06:47:25.096Z",
+  "lastEdited": "2023-11-26T14:06:09.640Z",
   "title": "cardcomposer"
 }
