@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, itemgetter
+from operator import add, mul, sub, truediv, getitem
 
 
 class Constants:
@@ -13,6 +13,6 @@ class Constants:
         "sum": sum,
         "min": min,
         "max": max,
-        "getitem": itemgetter,
+        "getitem": getitem,
         "getattr": getattr
     }
