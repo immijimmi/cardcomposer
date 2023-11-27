@@ -1,13 +1,28 @@
 from json import loads
 from typing import Optional
+from logging import warning, info
 
 from .cardface import CardFace
+from .constants import Constants
 
 
 class App:
     def __init__(self):
-        with open("cards.json", "r") as data_file:
-            cards_data: list[dict[str]] = loads(data_file.read())
+        try:
+            info(f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}...")
+            with open(Constants.CARDS_DATA_MANIFEST_FILE_PATH, "r") as manifest_file:
+                cards_data_files_paths: list[str] = loads(manifest_file.read())
+
+        except FileNotFoundError:
+            warning(f"Unable to locate cards data manifest, defaulting to {Constants.DEFAULT_CARDS_DATA_FILE_PATH}")
+            cards_data_files_paths = [Constants.DEFAULT_CARDS_DATA_FILE_PATH]
+
+        # Load cards data from each file
+        cards_data: list[dict[str]] = []
+        for file_path in cards_data_files_paths:
+            with open(file_path, "r") as data_file:
+                file_cards_data: list[dict[str]] = loads(data_file.read())
+            cards_data += file_cards_data
 
         cardfaces = []
         template_lookup: dict[str, list[CardFace]] = {}
