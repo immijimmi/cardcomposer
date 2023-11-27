@@ -1,9 +1,9 @@
 {
   "columns": [
     {
-      "cards": [],
       "id": "itzi87y1jxk60w8ppzj0z6tp",
-      "title": "Notes"
+      "title": "Notes",
+      "cards": []
     },
     {
       "id": "qqlgedz2grcezc5crjqo9jnu",
@@ -20,9 +20,9 @@
       ]
     },
     {
-      "cards": [],
       "id": "kz1t457fiblfbas8s7mxs0pj",
-      "title": "Issues"
+      "title": "Issues",
+      "cards": []
     },
     {
       "id": "kpk0wn7cyclskdefovgk84pm",
@@ -45,28 +45,21 @@
     {
       "id": "s3svm1k7ljtf51in0uzs23xi",
       "title": "Backlog",
-      "cards": [
-        {
-          "description": "- Step which prints text on a card face\n- Should require a point location, font, size & color",
-          "name": "#1 - Text Step"
-        },
-        {
-          "name": "#9 - Manifest File To Allow Splitting Cards Data Into Multiple Files",
-          "description": ""
-        }
-      ]
+      "cards": []
     },
     {
-      "cards": [],
       "id": "nqa0263wpbpu6hbjugdg0ny1",
-      "title": "Urgent"
+      "title": "Urgent",
+      "cards": []
     },
     {
-      "cards": [],
       "id": "e5tot30hst4jss96m666k5oo",
-      "title": "Doing"
+      "title": "Doing",
+      "cards": []
     },
     {
+      "id": "t989tdx1pj14i8am5hyftqvd",
+      "title": "Done",
       "cards": [
         {
           "description": "",
@@ -75,13 +68,19 @@
         {
           "description": "- Allow a seed value (either directly provided or cached for reuse) to be used to determine pseudo random rolls\n  - Can be used to 'randomly' but still deterministically select variations of images to apply to card faces; In other words, with the same seed, rolls will output the same sequence, but this sequence is 'random'. This means that assuming random values are requested in the same parts of the JSON input, the exact same 'randomly' selected variations should be applied to each card each time the application is run. Allows for diversity while still keeping the end result predictable",
           "name": "#7 - Seeded Random Value Generation"
+        },
+        {
+          "description": "- Step which prints text on a card face\n- Should require a point location, font, size & color",
+          "name": "#1 - Text Step"
+        },
+        {
+          "description": "",
+          "name": "#9 - Manifest File To Allow Splitting Cards Data Into Multiple Files"
         }
-      ],
-      "id": "t989tdx1pj14i8am5hyftqvd",
-      "title": "Done"
+      ]
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-26T14:06:09.640Z",
+  "lastEdited": "2023-11-27T16:06:23.834Z",
   "title": "cardcomposer"
 }
