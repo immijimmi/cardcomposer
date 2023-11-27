@@ -18,7 +18,10 @@ class DeferredValue(str, Enum):
     # Shortcut values
     CACHED = "cached"
     CARD_DIMENSION = "card_dim"
+    WORKING_IMAGE = "working_image"
 
     # PIL-specific values
     IMAGE = "image"
     FONT = "font"
+    TEXT_LENGTH = "text_length"
+    TEXT_BBOX = "text_bbox"

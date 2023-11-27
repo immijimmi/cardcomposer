@@ -1,6 +1,6 @@
 from PIL import Image, ImageFont, ImageDraw
 
-from typing import Optional, Callable, Union, Any, Sequence
+from typing import Optional, Callable, Union, Any, Sequence, Iterable
 from os import path
 from pathlib import Path
 from logging import info, debug
@@ -28,6 +28,8 @@ class CardFace:
         read during any subsequent steps once added
         """
         self.cache: dict[str] = {}
+        # Stores a reference to the image being generated during `.generate()`
+        self.working_image: Optional[Image.Image] = None
 
         self.label = label
         self.templates = tuple(templates)
@@ -71,7 +73,7 @@ class CardFace:
         debug(f"{type(self).__name__} cache cleared.")
 
         info(f"Generating new {type(self).__name__} image...")
-        image = Image.new("RGBA", self.size)
+        self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
         steps_sort_keys: list[dict[str, Any]] = []
@@ -102,11 +104,14 @@ class CardFace:
             debug(f"Processing {type(self).__name__} step: {step_type}")
 
             step_handler = self.step_handlers[step_type]
-            image = step_handler(image, step, self)
+            self.working_image = step_handler(self.working_image, step, self)
             info(f"{type(self).__name__} step ({step_type}) completed.")
 
+        result = self.working_image
+        self.working_image = None
+
         info(f"{type(self).__name__} image successfully generated.")
-        return image
+        return result
 
     def resolve_deferred_value(self, value):
         """
@@ -122,7 +127,7 @@ class CardFace:
         # Necessary to ensure due to the recursive nature of this method
         working_value = Methods.try_copy(value)
 
-        # Resolve deferred values in a loop until the remaining value is not a deferred value
+        # Resolve deferred value types in a loop until the remaining value is not a deferred value
         while deferred_value := self._deferred_value_type(working_value):
             if deferred_value == DeferredValue.SELF:
                 working_value = self
@@ -160,6 +165,9 @@ class CardFace:
                 else:
                     raise ValueError(f"invalid dimension name received: {dimension}")
 
+            elif deferred_value == DeferredValue.WORKING_IMAGE:
+                working_value = self.working_image
+
             elif deferred_value == DeferredValue.IMAGE:
                 # Required params
                 src: str = self.resolve_deferred_value(working_value["src"])
@@ -176,25 +184,81 @@ class CardFace:
                 index: Optional[int] = self.resolve_deferred_value(working_value.get("index", None))
                 encoding: Optional[str] = self.resolve_deferred_value(working_value.get("encoding", None))
 
-                truetype_kwargs = {
-                    "size": size,
-                    "index": index,
-                    "encoding": encoding
+                kwargs = {
+                    key: value for key, value in {
+                        "size": size,
+                        "index": index,
+                        "encoding": encoding
+                    }.items() if value is not None
                 }
+
                 if font_type == "truetype":
-                    kwargs = {
-                        key: value for key, value in truetype_kwargs.items() if value is not None
-                    }
                     working_value = ImageFont.truetype(font=src, **kwargs)
                 elif font_type == "bitmap":
-                    if any(value is not None for value in truetype_kwargs.values()):
-                        raise ValueError(
-                            f"truetype-specific font arg(s) provided for bitmap font type: {truetype_kwargs}"
-                        )
-
-                    working_value = ImageFont.load(src)
+                    working_value = ImageFont.load(src, **kwargs)
                 else:
                     raise ValueError(f"invalid font type: {font_type}")
+
+            elif deferred_value == DeferredValue.TEXT_LENGTH:
+                # Required params
+                text: str = self.resolve_deferred_value(working_value["text"])
+                font: ImageFont = self.resolve_deferred_value(working_value["font"])
+
+                # Optional params
+                image: Optional[Image.Image] = self.resolve_deferred_value(
+                    working_value.get("image", self.working_image)
+                )
+                direction: Optional[str] = self.resolve_deferred_value(working_value.get("direction", None))
+                features: Optional[Sequence[str]] = self.resolve_deferred_value(working_value.get("features", None))
+                language: Optional[str] = self.resolve_deferred_value(working_value.get("language", None))
+                embedded_color: Optional[bool] = self.resolve_deferred_value(working_value.get("embedded_color", None))
+
+                kwargs = {
+                    key: value for key, value in {
+                        "direction": direction,
+                        "features": features,
+                        "language": language,
+                        "embedded_color": embedded_color
+                    }.items() if value is not None
+                }
+
+                draw = ImageDraw.Draw(image)
+                working_value = draw.textlength(text=text, font=font, **kwargs)
+
+            elif deferred_value == DeferredValue.TEXT_BBOX:
+                # Required params
+                position: tuple[float, float] = self.resolve_deferred_value(working_value["position"])  # Floats are accepted here
+                text: str = self.resolve_deferred_value(working_value["text"])
+                font: ImageFont = self.resolve_deferred_value(working_value["font"])
+
+                # Optional params
+                image: Optional[Image.Image] = self.resolve_deferred_value(
+                    working_value.get("image", self.working_image)
+                )
+                anchor: Optional[str] = self.resolve_deferred_value(working_value.get("anchor", None))
+                spacing: Optional[float] = self.resolve_deferred_value(working_value.get("spacing", None))
+                align: Optional[str] = self.resolve_deferred_value(working_value.get("align", None))
+                direction: Optional[str] = self.resolve_deferred_value(working_value.get("direction", None))
+                features: Optional[Sequence[str]] = self.resolve_deferred_value(working_value.get("features", None))
+                language: Optional[str] = self.resolve_deferred_value(working_value.get("language", None))
+                stroke_width: Optional[int] = self.resolve_deferred_value(working_value.get("stroke_width", None))
+                embedded_color: Optional[bool] = self.resolve_deferred_value(working_value.get("language", None))
+
+                kwargs = {
+                    key: value for key, value in {
+                        "anchor": anchor,
+                        "spacing": spacing,
+                        "align": align,
+                        "direction": direction,
+                        "features": features,
+                        "language": language,
+                        "stroke_width": stroke_width,
+                        "embedded_color": embedded_color
+                    }.items() if value is not None
+                }
+
+                draw = ImageDraw.Draw(image)
+                working_value = draw.textbbox(xy=position, text=text, font=font, **kwargs)
 
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
@@ -222,7 +286,7 @@ class CardFace:
         """
 
         # Required params
-        operands: tuple = self.resolve_deferred_value(calculation["args"])
+        operands: Iterable = self.resolve_deferred_value(calculation["args"])
         operation_key: str = self.resolve_deferred_value(calculation["op"])
 
         operation = Constants.CALCULATIONS_LOOKUP[operation_key]
@@ -368,5 +432,43 @@ class CardFace:
 
         Path(file_path).mkdir(parents=True, exist_ok=True)
         image.save(full_path)
+
+        return image
+
+    @staticmethod
+    def _step_text(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+        # Required params
+        position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])  # Floats are accepted here
+        text: str = card_face.resolve_deferred_value(step["text"])
+        fill = card_face.resolve_deferred_value(step["fill"])
+        font: ImageFont = card_face.resolve_deferred_value(step["font"])
+
+        # Optional params
+        anchor: Optional[str] = card_face.resolve_deferred_value(step.get("anchor", None))
+        spacing: Optional[float] = card_face.resolve_deferred_value(step.get("spacing", None))
+        align: Optional[str] = card_face.resolve_deferred_value(step.get("align", None))
+        direction: Optional[str] = card_face.resolve_deferred_value(step.get("direction", None))
+        features: Optional[Sequence[str]] = card_face.resolve_deferred_value(step.get("features", None))
+        language: Optional[str] = card_face.resolve_deferred_value(step.get("language", None))
+        stroke_width: Optional[int] = card_face.resolve_deferred_value(step.get("stroke_width", None))
+        stroke_fill = card_face.resolve_deferred_value(step.get("stroke_fill", None))
+        embedded_color: Optional[bool] = card_face.resolve_deferred_value(step.get("language", None))
+
+        kwargs = {
+            key: value for key, value in {
+                "anchor": anchor,
+                "spacing": spacing,
+                "align": align,
+                "direction": direction,
+                "features": features,
+                "language": language,
+                "stroke_width": stroke_width,
+                "stroke_fill": stroke_fill,
+                "embedded_color": embedded_color
+            }.items() if value is not None
+        }
+
+        draw = (ImageDraw.Draw(image))
+        draw.text(xy=position, text=text, fill=fill, font=font, **kwargs)
 
         return image
