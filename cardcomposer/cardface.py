@@ -20,7 +20,8 @@ class CardFace:
         self.step_handlers: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {
             "paste_image": self._step_paste_image,
             "write_to_cache": self._step_write_to_cache,
-            "save": self._step_save
+            "save": self._step_save,
+            "write_text": self._step_write_text
         }
         """
         The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
@@ -436,7 +437,7 @@ class CardFace:
         return image
 
     @staticmethod
-    def _step_text(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def _step_write_text(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])  # Floats are accepted here
         text: str = card_face.resolve_deferred_value(step["text"])
