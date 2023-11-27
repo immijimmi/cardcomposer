@@ -32,3 +32,10 @@ class Methods:
                 return numbers
 
         return tuple(round(number) for number in numbers)
+
+    @staticmethod
+    def coalesce_list_to_tuple(value):
+        if type(value) is list:
+            return tuple(value)
+
+        return value

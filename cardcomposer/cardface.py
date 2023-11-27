@@ -441,7 +441,9 @@ class CardFace:
         # Required params
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])  # Floats are accepted here
         text: str = card_face.resolve_deferred_value(step["text"])
-        fill = card_face.resolve_deferred_value(step["fill"])
+        fill = Methods.coalesce_list_to_tuple(
+            card_face.resolve_deferred_value(step["fill"])
+        )
         font: ImageFont = card_face.resolve_deferred_value(step["font"])
 
         # Optional params
