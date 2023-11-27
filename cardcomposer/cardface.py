@@ -358,8 +358,6 @@ class CardFace:
             card_face.resolve_deferred_value(step.get("opacity", None))
         )
 
-        compatibility_layer = Image.new("RGBA", image.size)
-
         if crop:
             embed_image = embed_image.crop(crop)
 
@@ -408,8 +406,8 @@ class CardFace:
                 embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
 
         if opacity is not None:
-            blank_image = Image.new(mode="RGBA", size=embed_image.size)
-            embed_image = Image.blend(blank_image, embed_image, alpha=opacity)
+            opacity_layer = Image.new(mode="RGBA", size=embed_image.size)
+            embed_image = Image.blend(opacity_layer, embed_image, alpha=opacity)
 
         paste_box = (
             position[0],
@@ -417,6 +415,7 @@ class CardFace:
             position[0] + embed_image.size[0],
             position[1] + embed_image.size[1]
         )
+        compatibility_layer = Image.new("RGBA", image.size)
         compatibility_layer.paste(embed_image, paste_box)
 
         image = Image.alpha_composite(image, compatibility_layer)
@@ -471,7 +470,9 @@ class CardFace:
             }.items() if value is not None
         }
 
-        draw = (ImageDraw.Draw(image))
+        compatibility_layer = Image.new("RGBA", image.size)
+        draw = (ImageDraw.Draw(compatibility_layer))
         draw.text(xy=position, text=text, fill=fill, font=font, **kwargs)
 
+        image = Image.alpha_composite(image, compatibility_layer)
         return image
