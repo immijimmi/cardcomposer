@@ -1,9 +1,9 @@
 {
   "columns": [
     {
+      "cards": [],
       "id": "itzi87y1jxk60w8ppzj0z6tp",
-      "title": "Notes",
-      "cards": []
+      "title": "Notes"
     },
     {
       "id": "qqlgedz2grcezc5crjqo9jnu",
@@ -16,17 +16,19 @@
         {
           "description": "- Some way to indicate externally which keys will be indexed out of a step by the step hander, and what constraints the relevant values have (required or optional, which keys are exclusive of each other, expected type, possibly an additional docstring per value to indicate more unique constraints)\n  - Should be possible to 'register' this metadata along with storing the step handler itself - perhaps a method which is responsible for indexing both the metadata into a lookup dict on the instance, and also the handler into the existing handlers lookup dict? Then since this metadata is now available to the instance, it could be used to automate retrieval and processing of data from a step before passing it into the step handler - if flagged as 'optional' then perform a `.get()` on the step with the desired default value as also taken from the metadata, if multiple keys are flagged as exclusive of each other then raise an exception if multiple are present etc.",
           "name": "#3 - Step Handler Auto-Documentation"
+        },
+        {
+          "name": "#10 - JSON QoL",
+          "description": "Consider adding support for some features more typical to import statements from conventional programming to the card data - for example, JSON objects which are local to their file and not available to other files (local-only card data templates)"
         }
       ]
     },
     {
+      "cards": [],
       "id": "kz1t457fiblfbas8s7mxs0pj",
-      "title": "Issues",
-      "cards": []
+      "title": "Issues"
     },
     {
-      "id": "kpk0wn7cyclskdefovgk84pm",
-      "title": "Icebox",
       "cards": [
         {
           "description": "Extend the deferred values system used within CardFace to be usable globally, so that other params passed into CardFace can themselves be deferred values.\n\nNot all aspects of the logic currently used within CardFace are applicable globally (e.g. DeferredValue.CARD_DIMENSION makes no sense outside of the scope of a CardFace instance) so this will need to be considered when implementing the refactor.\n\n- Possible alternative implementation that allows some external data to be accessible: `template_pool={}` param, and change `template` param into a str param. Move <template str label -> CardFace> conversion from __main__ into the constructor accordingly. Because the default arg here is mutable, by default the template pool will be accessible to all CardFace objects.\nFor convenience also make a `template_pool` property on CardFace so that whatever pool is in use by an instance is accessible externally\n- Once this is implemented, add a new step that simply stores the current CardFace instance in the template pool, and remove that logic from App",
@@ -40,26 +42,26 @@
           "description": "- If label is no longer used to store templates (once template step is added) and is not strictly necessary to save image, it may possibly be removed\n  - Consider whether it is better to remove it and require strings to be passed into each of these steps, or whether to keep and make it mandatory in both steps to standardise its usage as an identifier\n    - Should the image filename be required to be the same as the template name for a CardFace?",
           "name": "#6 (Blocked by #5) - Look Into Deprecating Label Param"
         }
-      ]
+      ],
+      "id": "kpk0wn7cyclskdefovgk84pm",
+      "title": "Icebox"
     },
     {
+      "cards": [],
       "id": "s3svm1k7ljtf51in0uzs23xi",
-      "title": "Backlog",
-      "cards": []
+      "title": "Backlog"
     },
     {
+      "cards": [],
       "id": "nqa0263wpbpu6hbjugdg0ny1",
-      "title": "Urgent",
-      "cards": []
+      "title": "Urgent"
     },
     {
+      "cards": [],
       "id": "e5tot30hst4jss96m666k5oo",
-      "title": "Doing",
-      "cards": []
+      "title": "Doing"
     },
     {
-      "id": "t989tdx1pj14i8am5hyftqvd",
-      "title": "Done",
       "cards": [
         {
           "description": "",
@@ -70,17 +72,15 @@
           "name": "#7 - Seeded Random Value Generation"
         },
         {
-          "description": "- Step which prints text on a card face\n- Should require a point location, font, size & color",
-          "name": "#1 - Text Step"
-        },
-        {
           "description": "",
           "name": "#9 - Manifest File To Allow Splitting Cards Data Into Multiple Files"
         }
-      ]
+      ],
+      "id": "t989tdx1pj14i8am5hyftqvd",
+      "title": "Done"
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-27T16:06:23.834Z",
+  "lastEdited": "2023-11-27T20:03:16.586Z",
   "title": "cardcomposer"
 }

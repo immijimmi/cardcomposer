@@ -13,6 +13,8 @@ class App:
             with open(Constants.CARDS_DATA_MANIFEST_FILE_PATH, "r") as manifest_file:
                 cards_data_files_paths: list[str] = loads(manifest_file.read())
 
+            info(f"Manifest successfully loaded.")
+
         except FileNotFoundError:
             warning(f"Unable to locate cards data manifest, defaulting to {Constants.DEFAULT_CARDS_DATA_FILE_PATH}")
             cards_data_files_paths = [Constants.DEFAULT_CARDS_DATA_FILE_PATH]
