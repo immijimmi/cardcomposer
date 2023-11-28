@@ -169,7 +169,7 @@ class CardFace:
             elif deferred_value == DeferredValue.WORKING_IMAGE:
                 working_value = self.working_image
 
-            elif deferred_value == DeferredValue.IMAGE:
+            elif deferred_value == DeferredValue.IMAGE_FROM_FILE:
                 # Required params
                 src: str = self.resolve_deferred_value(working_value["src"])
 
@@ -206,9 +206,7 @@ class CardFace:
                 font: ImageFont = self.resolve_deferred_value(working_value["font"])
 
                 # Optional params
-                image: Optional[Image.Image] = self.resolve_deferred_value(
-                    working_value.get("image", self.working_image)
-                )
+                text_layer: Optional[Image.Image] = self.resolve_deferred_value(working_value.get("text_layer", None))
                 direction: Optional[str] = self.resolve_deferred_value(working_value.get("direction", None))
                 features: Optional[Sequence[str]] = self.resolve_deferred_value(working_value.get("features", None))
                 language: Optional[str] = self.resolve_deferred_value(working_value.get("language", None))
@@ -223,7 +221,8 @@ class CardFace:
                     }.items() if value is not None
                 }
 
-                draw = ImageDraw.Draw(image)
+                text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
+                draw = ImageDraw.Draw(text_layer)
                 working_value = draw.textlength(text=text, font=font, **kwargs)
 
             elif deferred_value == DeferredValue.TEXT_BBOX:
@@ -233,9 +232,7 @@ class CardFace:
                 font: ImageFont = self.resolve_deferred_value(working_value["font"])
 
                 # Optional params
-                image: Optional[Image.Image] = self.resolve_deferred_value(
-                    working_value.get("image", self.working_image)
-                )
+                text_layer: Optional[Image.Image] = self.resolve_deferred_value(working_value.get("text_layer", None))
                 anchor: Optional[str] = self.resolve_deferred_value(working_value.get("anchor", None))
                 spacing: Optional[float] = self.resolve_deferred_value(working_value.get("spacing", None))
                 align: Optional[str] = self.resolve_deferred_value(working_value.get("align", None))
@@ -258,7 +255,8 @@ class CardFace:
                     }.items() if value is not None
                 }
 
-                draw = ImageDraw.Draw(image)
+                text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
+                draw = ImageDraw.Draw(text_layer)
                 working_value = draw.textbbox(xy=position, text=text, font=font, **kwargs)
 
             else:
@@ -402,6 +400,7 @@ class CardFace:
         font: ImageFont = card_face.resolve_deferred_value(step["font"])
 
         # Optional params
+        text_layer: Optional[Image.Image] = card_face.resolve_deferred_value(step.get("text_layer", None))
         crop: Optional[tuple[int, int, int, int]] = Methods.ensure_ints(
             card_face.resolve_deferred_value(step.get("crop", None))
         )
@@ -441,7 +440,7 @@ class CardFace:
             }.items() if value is not None
         }
 
-        text_layer = Image.new("RGBA", image.size)
+        text_layer = Image.new("RGBA", image.size) if (text_layer is None) else text_layer
         draw = ImageDraw.Draw(text_layer)
         draw.text(xy=position, text=text, fill=fill, font=font, **text_optional_kwargs)
 

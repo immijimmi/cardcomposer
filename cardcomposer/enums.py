@@ -21,7 +21,7 @@ class DeferredValue(str, Enum):
     WORKING_IMAGE = "working_image"
 
     # PIL-specific values
-    IMAGE = "image"
+    IMAGE_FROM_FILE = "image_from_file"
     FONT = "font"
     TEXT_LENGTH = "text_length"
     TEXT_BBOX = "text_bbox"
