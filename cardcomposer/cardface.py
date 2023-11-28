@@ -300,8 +300,17 @@ class CardFace:
         operands: Iterable = self.resolve_deferred_value(calculation["args"])
         operation_key: str = self.resolve_deferred_value(calculation["op"])
 
+        # Optional params
+        do_log: bool = self.resolve_deferred_value(calculation.get("do_log", False))
+
+        operands = tuple(operands)
         operation = Constants.CALCULATIONS_LOOKUP[operation_key]
-        return operation(*operands)
+        result = operation(*operands)
+
+        if do_log:
+            debug(f"Performing calculation step: {operation}{operands} -> {result}")
+
+        return result
 
     @staticmethod
     def _deferred_value_type(value) -> Optional[str]:
