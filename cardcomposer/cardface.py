@@ -358,56 +358,11 @@ class CardFace:
             card_face.resolve_deferred_value(step.get("opacity", None))
         )
 
-        if crop:
-            embed_image = embed_image.crop(crop)
-
-        if scale:
-            if (type(scale[0]) is bool) and (type(scale[1]) is bool):
-                pass  # No numeric value to scale image with has been provided
-            else:
-                if scale[0] is False:
-                    scaled_width = embed_image.size[0]
-                elif scale[0] is True:
-                    scaled_width = embed_image.size[0] * scale[1]
-                else:
-                    scaled_width = embed_image.size[0] * scale[0]
-
-                if scale[1] is False:
-                    scaled_height = embed_image.size[1]
-                elif scale[1] is True:
-                    scaled_height = embed_image.size[1] * scale[0]
-                else:
-                    scaled_height = embed_image.size[1] * scale[1]
-
-                new_embed_image_size = Methods.ensure_ints((scaled_width, scaled_height))
-                # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
-                embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
-
-        if resize_to:
-            if (type(resize_to[0]) is bool) and (type(resize_to[1]) is bool):
-                pass  # No numeric value to scale image with has been provided
-            else:
-                if resize_to[0] is False:
-                    resized_width = embed_image.size[0]
-                elif resize_to[0] is True:
-                    resized_width = embed_image.size[0] * (resize_to[1]/embed_image.size[1])
-                else:
-                    resized_width = resize_to[0]
-
-                if resize_to[1] is False:
-                    resized_height = embed_image.size[1]
-                elif resize_to[1] is True:
-                    resized_height = embed_image.size[1] * (resize_to[0]/embed_image.size[0])
-                else:
-                    resized_height = resize_to[1]
-
-                new_embed_image_size = Methods.ensure_ints((resized_width, resized_height))
-                # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
-                embed_image = embed_image.resize(new_embed_image_size, resample=Image.Resampling.LANCZOS)
-
-        if opacity is not None:
-            opacity_layer = Image.new(mode="RGBA", size=embed_image.size)
-            embed_image = Image.blend(opacity_layer, embed_image, alpha=opacity)
+        embed_image = Methods.manipulate_image(
+            embed_image,
+            crop=crop, scale=scale,
+            resize_to=resize_to, opacity=opacity
+        )
 
         paste_box = (
             position[0],
@@ -415,6 +370,7 @@ class CardFace:
             position[0] + embed_image.size[0],
             position[1] + embed_image.size[1]
         )
+
         compatibility_layer = Image.new("RGBA", image.size)
         compatibility_layer.paste(embed_image, paste_box)
 
@@ -446,6 +402,21 @@ class CardFace:
         font: ImageFont = card_face.resolve_deferred_value(step["font"])
 
         # Optional params
+        crop: Optional[tuple[int, int, int, int]] = Methods.ensure_ints(
+            card_face.resolve_deferred_value(step.get("crop", None))
+        )
+        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
+            card_face.resolve_deferred_value(step.get("scale", None))
+        )
+        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
+            card_face.resolve_deferred_value(step.get("resize_to", None))
+        )
+        opacity: Optional[float] = (
+            card_face.resolve_deferred_value(step.get("opacity", None))
+        )
+        layer_position: Union[tuple[int, int], True] = card_face.resolve_deferred_value(
+            step.get("layer_position", (0, 0))
+        )
         anchor: Optional[str] = card_face.resolve_deferred_value(step.get("anchor", None))
         spacing: Optional[float] = card_face.resolve_deferred_value(step.get("spacing", None))
         align: Optional[str] = card_face.resolve_deferred_value(step.get("align", None))
@@ -456,7 +427,7 @@ class CardFace:
         stroke_fill = card_face.resolve_deferred_value(step.get("stroke_fill", None))
         embedded_color: Optional[bool] = card_face.resolve_deferred_value(step.get("language", None))
 
-        kwargs = {
+        text_optional_kwargs = {
             key: value for key, value in {
                 "anchor": anchor,
                 "spacing": spacing,
@@ -470,9 +441,26 @@ class CardFace:
             }.items() if value is not None
         }
 
+        text_layer = Image.new("RGBA", image.size)
+        draw = ImageDraw.Draw(text_layer)
+        draw.text(xy=position, text=text, fill=fill, font=font, **text_optional_kwargs)
+
+        text_layer = Methods.manipulate_image(
+            text_layer,
+            crop=crop, scale=scale,
+            resize_to=resize_to, opacity=opacity
+        )
+
+        layer_position = tuple(position) if (layer_position is True) else layer_position
+        paste_box = (
+            layer_position[0],
+            layer_position[1],
+            layer_position[0] + text_layer.size[0],
+            layer_position[1] + text_layer.size[1]
+        )
+
         compatibility_layer = Image.new("RGBA", image.size)
-        draw = (ImageDraw.Draw(compatibility_layer))
-        draw.text(xy=position, text=text, fill=fill, font=font, **kwargs)
+        compatibility_layer.paste(text_layer, paste_box)
 
         image = Image.alpha_composite(image, compatibility_layer)
         return image
