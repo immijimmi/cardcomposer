@@ -80,11 +80,15 @@
         {
           "description": "",
           "name": "#9 - Manifest File To Allow Splitting Cards Data Into Multiple Files"
+        },
+        {
+          "description": "- When resolving a cached value, if the cached value is not present then an exception should be raised unless a default was provided. If a default was provided, it should be returned instead of the expected cached value",
+          "name": "#12 - Default Values for \"deferred\": \"cached\""
         }
       ]
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-28T15:57:59.319Z",
+  "lastEdited": "2023-11-28T18:01:20.266Z",
   "title": "cardcomposer"
 }

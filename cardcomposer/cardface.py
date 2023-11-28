@@ -153,7 +153,13 @@ class CardFace:
                 # Required params
                 cache_key = self.resolve_deferred_value(working_value["key"])
 
-                working_value = self.cache[cache_key]
+                try:
+                    working_value = self.cache[cache_key]
+                except KeyError:
+                    if "default" not in working_value:
+                        raise KeyError(f"no value found in cache and no default provided for key: {cache_key}")
+
+                    working_value = working_value["default"]
 
             elif deferred_value == DeferredValue.CARD_DIMENSION:
                 # Required params
