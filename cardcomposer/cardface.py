@@ -106,7 +106,6 @@ class CardFace:
 
             step_handler = self.step_handlers[step_type]
             self.working_image = step_handler(self.working_image, step, self)
-            info(f"{type(self).__name__} step ({step_type}) completed.")
 
         result = self.working_image
         self.working_image = None
@@ -308,7 +307,7 @@ class CardFace:
         result = operation(*operands)
 
         if do_log:
-            debug(f"Performing calculation step: {operation}{operands} -> {result}")
+            info(f"Performing calculation step: {operation}{operands} -> {result}")
 
         return result
 
@@ -354,7 +353,7 @@ class CardFace:
             raise ValueError(f"unrecognised write mode: {mode}")
 
         if do_log:
-            debug(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
+            info(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
 
         card_face.cache[key] = value
 
