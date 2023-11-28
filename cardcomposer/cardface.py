@@ -73,7 +73,7 @@ class CardFace:
         self.cache.clear()
         debug(f"{type(self).__name__} cache cleared.")
 
-        info(f"Generating new {type(self).__name__} image...")
+        info(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
