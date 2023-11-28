@@ -337,6 +337,7 @@ class CardFace:
         # Optional params
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
         is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
+        do_log: bool = card_face.resolve_deferred_value(step.get("do_log", False))
 
         if not is_lazy:  # Resolve value now rather than waiting until it is needed
             value = card_face.resolve_deferred_value(value)
@@ -351,6 +352,10 @@ class CardFace:
             pass
         else:
             raise ValueError(f"unrecognised write mode: {mode}")
+
+        if do_log:
+            debug(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
+
         card_face.cache[key] = value
 
         return image
