@@ -175,6 +175,12 @@ class CardFace:
 
                 working_value = Image.open(src)
 
+            elif deferred_value == DeferredValue.BLANK_IMAGE:
+                # Required params
+                size: tuple[int, int] = self.resolve_deferred_value(working_value["size"])
+
+                working_value = Image.new("RGBA", size)
+
             elif deferred_value == DeferredValue.FONT:
                 # Required params
                 src: str = self.resolve_deferred_value(working_value["src"])
