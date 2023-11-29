@@ -182,9 +182,9 @@ class CardFace:
 
             elif deferred_value == DeferredValue.BLANK_IMAGE:
                 # Required params
-                size: tuple[int, int] = self.resolve_deferred_value(working_value["size"])
+                size: tuple[float, float] = self.resolve_deferred_value(working_value["size"])
 
-                working_value = Image.new("RGBA", size)
+                working_value = Image.new("RGBA", Methods.ensure_ints(size))
 
             elif deferred_value == DeferredValue.FONT:
                 # Required params
@@ -242,7 +242,7 @@ class CardFace:
 
             elif deferred_value == DeferredValue.TEXT_BBOX:
                 # Required params
-                position: tuple[float, float] = self.resolve_deferred_value(working_value["position"])  # Floats are accepted here
+                position: tuple[float, float] = self.resolve_deferred_value(working_value["position"])
                 text: str = self.resolve_deferred_value(working_value["text"])
                 font: ImageFont = self.resolve_deferred_value(working_value["font"])
 
@@ -272,6 +272,7 @@ class CardFace:
 
                 text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
                 draw = ImageDraw.Draw(text_layer)
+                # Floats are accepted here for xy
                 working_value = draw.textbbox(xy=position, text=text, font=font, **textbbox_optional_kwargs)
 
             else:
@@ -367,9 +368,7 @@ class CardFace:
     def _step_paste_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         embed_image: Image.Image = card_face.resolve_deferred_value(step["image"])
-        position: tuple[int, int] = Methods.ensure_ints(
-            card_face.resolve_deferred_value(step["position"])
-        )
+        position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
 
         embed_image = Methods.manipulate_image(
             embed_image,
@@ -384,7 +383,7 @@ class CardFace:
         )
 
         compatibility_layer = Image.new("RGBA", image.size)
-        compatibility_layer.paste(embed_image, paste_box)
+        compatibility_layer.paste(embed_image, Methods.ensure_ints(paste_box))
 
         image = Image.alpha_composite(image, compatibility_layer)
         return image
@@ -406,7 +405,7 @@ class CardFace:
     @staticmethod
     def _step_write_text(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
-        position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])  # Floats are accepted here
+        position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
         text: str = card_face.resolve_deferred_value(step["text"])
         fill = Methods.coalesce_list_to_tuple(
             card_face.resolve_deferred_value(step["fill"])
@@ -415,7 +414,7 @@ class CardFace:
 
         # Optional params
         text_layer: Optional[Image.Image] = card_face.resolve_deferred_value(step.get("text_layer", None))
-        layer_position: Union[tuple[int, int], True] = card_face.resolve_deferred_value(
+        layer_position: Union[tuple[float, float], True] = card_face.resolve_deferred_value(
             step.get("layer_position", (0, 0))
         )
         anchor: Optional[str] = card_face.resolve_deferred_value(step.get("anchor", None))
@@ -444,6 +443,7 @@ class CardFace:
 
         text_layer = Image.new("RGBA", image.size) if (text_layer is None) else text_layer
         draw = ImageDraw.Draw(text_layer)
+        # Floats are accepted here for xy
         draw.text(xy=position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
 
         text_layer = Methods.manipulate_image(
@@ -460,7 +460,7 @@ class CardFace:
         )
 
         compatibility_layer = Image.new("RGBA", image.size)
-        compatibility_layer.paste(text_layer, paste_box)
+        compatibility_layer.paste(text_layer, Methods.ensure_ints(paste_box))
 
         image = Image.alpha_composite(image, compatibility_layer)
         return image
