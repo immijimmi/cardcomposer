@@ -53,10 +53,10 @@ class Methods:
         scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
             card_face.resolve_deferred_value(data.get("scale", None))
         )
-        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
+        resize_to: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
             card_face.resolve_deferred_value(data.get("resize_to", None))
         )
-        limits: Optional[Iterable[tuple[str, str, float, bool]]] = (
+        limits: Optional[Iterable[dict[str]]] = (
             card_face.resolve_deferred_value(data.get("limits", None))
         )
         opacity: Optional[float] = (
@@ -74,9 +74,9 @@ class Methods:
     @staticmethod
     def manipulate_image(
             image: Image.Image,
-            crop: Optional[tuple[int, int, int, int]] = None,
+            crop: Optional[tuple[float, float, float, float]] = None,
             scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = None,
-            resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = None,
+            resize_to: Optional[tuple[Union[float, bool], Union[float, bool]]] = None,
             limits: Optional[Iterable[dict[str]]] = None,
             opacity: Optional[float] = None
     ) -> Image.Image:
@@ -128,26 +128,28 @@ class Methods:
                 image = image.resize(Methods.ensure_ints(new_image_size), resample=Image.Resampling.LANCZOS)
 
         if limits:
-            limit: tuple[str, str, float, bool]
             for limit in limits:
-                limit_type, limit_dim, limit_val, do_maintain_proportions = limit
+                limit_type: str = limit["type"]
+                limit_dimension: str = limit["dimension"]
+                limit_value: float = limit["value"]
+                do_maintain_proportions: bool = limit["do_maintain_proportions"]
 
-                limited_dim_index = {"width": 0, "height": 1}[limit_dim]
+                limited_dim_index = {"width": 0, "height": 1}[limit_dimension]
                 limited_dim_value = image.size[limited_dim_index]
 
                 limit_func = {"min": min, "max": max}[limit_type]
-                if limit_func(limited_dim_value, limit_val) == limit_val:  # Dimension is within the provided limit
+                if limit_func(limited_dim_value, limit_value) == limit_value:  # Dimension is within the provided limit
                     continue
 
                 other_dim_index = int(not limited_dim_index)
                 other_dim_value = image.size[other_dim_index]
                 if do_maintain_proportions:
-                    other_dim_resized_value = other_dim_value * (limit_val / limited_dim_value)
+                    other_dim_resized_value = other_dim_value * (limit_value / limited_dim_value)
                 else:
                     other_dim_resized_value = other_dim_value
 
                 new_image_size = [None, None]
-                new_image_size[limited_dim_index] = limit_val
+                new_image_size[limited_dim_index] = limit_value
                 new_image_size[other_dim_index] = other_dim_resized_value
 
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
