@@ -43,6 +43,32 @@ class Methods:
         return value
 
     @staticmethod
+    def unpack_manipulate_image_kwargs(data: dict[str], card_face: "CardFace") -> dict[str]:
+        """
+        Unpacks and resolves only the kwargs used in `.manipulate_image()` from the provided data
+        """
+
+        crop: Optional[tuple[int, int, int, int]] = Methods.ensure_ints(
+            card_face.resolve_deferred_value(data.get("crop", None))
+        )
+        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
+            card_face.resolve_deferred_value(data.get("scale", None))
+        )
+        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
+            card_face.resolve_deferred_value(data.get("resize_to", None))
+        )
+        opacity: Optional[float] = (
+            card_face.resolve_deferred_value(data.get("opacity", None))
+        )
+
+        return {
+            "crop": crop,
+            "scale": scale,
+            "resize_to": resize_to,
+            "opacity": opacity
+        }
+
+    @staticmethod
     def manipulate_image(
             image: Image.Image,
             crop: Optional[tuple[int, int, int, int]] = None,

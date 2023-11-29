@@ -196,7 +196,7 @@ class CardFace:
                 index: Optional[int] = self.resolve_deferred_value(working_value.get("index", None))
                 encoding: Optional[str] = self.resolve_deferred_value(working_value.get("encoding", None))
 
-                kwargs = {
+                font_optional_kwargs = {
                     key: value for key, value in {
                         "size": size,
                         "index": index,
@@ -205,9 +205,13 @@ class CardFace:
                 }
 
                 if font_type == "truetype":
-                    working_value = ImageFont.truetype(font=src, **kwargs)
+                    working_value = ImageFont.truetype(font=src, **font_optional_kwargs)
                 elif font_type == "bitmap":
-                    working_value = ImageFont.load(src, **kwargs)
+                    """
+                    kwargs are purposefully provided here despite not being expected,
+                    since for a bitmap font they should be empty anyway
+                    """
+                    working_value = ImageFont.load(src, **font_optional_kwargs)
                 else:
                     raise ValueError(f"invalid font type: {font_type}")
 
@@ -223,7 +227,7 @@ class CardFace:
                 language: Optional[str] = self.resolve_deferred_value(working_value.get("language", None))
                 embedded_color: Optional[bool] = self.resolve_deferred_value(working_value.get("embedded_color", None))
 
-                kwargs = {
+                textlength_optional_kwargs = {
                     key: value for key, value in {
                         "direction": direction,
                         "features": features,
@@ -234,7 +238,7 @@ class CardFace:
 
                 text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
                 draw = ImageDraw.Draw(text_layer)
-                working_value = draw.textlength(text=text, font=font, **kwargs)
+                working_value = draw.textlength(text=text, font=font, **textlength_optional_kwargs)
 
             elif deferred_value == DeferredValue.TEXT_BBOX:
                 # Required params
@@ -253,7 +257,7 @@ class CardFace:
                 stroke_width: Optional[int] = self.resolve_deferred_value(working_value.get("stroke_width", None))
                 embedded_color: Optional[bool] = self.resolve_deferred_value(working_value.get("language", None))
 
-                kwargs = {
+                textbbox_optional_kwargs = {
                     key: value for key, value in {
                         "anchor": anchor,
                         "spacing": spacing,
@@ -268,7 +272,7 @@ class CardFace:
 
                 text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
                 draw = ImageDraw.Draw(text_layer)
-                working_value = draw.textbbox(xy=position, text=text, font=font, **kwargs)
+                working_value = draw.textbbox(xy=position, text=text, font=font, **textbbox_optional_kwargs)
 
             else:
                 raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
@@ -367,24 +371,9 @@ class CardFace:
             card_face.resolve_deferred_value(step["position"])
         )
 
-        # Optional params
-        crop: Optional[tuple[int, int, int, int]] = Methods.ensure_ints(
-            card_face.resolve_deferred_value(step.get("crop", None))
-        )
-        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
-            card_face.resolve_deferred_value(step.get("scale", None))
-        )
-        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
-            card_face.resolve_deferred_value(step.get("resize_to", None))
-        )
-        opacity: Optional[float] = (
-            card_face.resolve_deferred_value(step.get("opacity", None))
-        )
-
         embed_image = Methods.manipulate_image(
             embed_image,
-            crop=crop, scale=scale,
-            resize_to=resize_to, opacity=opacity
+            **Methods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
         paste_box = (
@@ -426,18 +415,6 @@ class CardFace:
 
         # Optional params
         text_layer: Optional[Image.Image] = card_face.resolve_deferred_value(step.get("text_layer", None))
-        crop: Optional[tuple[int, int, int, int]] = Methods.ensure_ints(
-            card_face.resolve_deferred_value(step.get("crop", None))
-        )
-        scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
-            card_face.resolve_deferred_value(step.get("scale", None))
-        )
-        resize_to: Optional[tuple[Union[int, bool], Union[int, bool]]] = (
-            card_face.resolve_deferred_value(step.get("resize_to", None))
-        )
-        opacity: Optional[float] = (
-            card_face.resolve_deferred_value(step.get("opacity", None))
-        )
         layer_position: Union[tuple[int, int], True] = card_face.resolve_deferred_value(
             step.get("layer_position", (0, 0))
         )
@@ -451,7 +428,7 @@ class CardFace:
         stroke_fill = card_face.resolve_deferred_value(step.get("stroke_fill", None))
         embedded_color: Optional[bool] = card_face.resolve_deferred_value(step.get("language", None))
 
-        text_optional_kwargs = {
+        draw_text_optional_kwargs = {
             key: value for key, value in {
                 "anchor": anchor,
                 "spacing": spacing,
@@ -467,12 +444,11 @@ class CardFace:
 
         text_layer = Image.new("RGBA", image.size) if (text_layer is None) else text_layer
         draw = ImageDraw.Draw(text_layer)
-        draw.text(xy=position, text=text, fill=fill, font=font, **text_optional_kwargs)
+        draw.text(xy=position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
 
         text_layer = Methods.manipulate_image(
             text_layer,
-            crop=crop, scale=scale,
-            resize_to=resize_to, opacity=opacity
+            **Methods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
         layer_position = tuple(position) if (layer_position is True) else layer_position
