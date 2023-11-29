@@ -43,12 +43,7 @@
     {
       "id": "kpk0wn7cyclskdefovgk84pm",
       "title": "Icebox",
-      "cards": [
-        {
-          "description": "- `.manipulate_image()` should be able to receive upper and lower x and y limits, and set whether to maintain aspect ratio for each limit\n  - Possible implementation: param limits: Sequence[dict[str, Union[str, tuple[Union[int, bool], Union[int, bool]]]]]\n    - Example: [{\"type\": \"min\", \"value\": [200, true]}, {\"type\": \"min\", \"value\": [False, 100]}]\n    - Limits provided in this manner should be processed in order\n",
-          "name": "#11 - Add limits param to `Methods.manipulate_image()`"
-        }
-      ]
+      "cards": []
     },
     {
       "id": "s3svm1k7ljtf51in0uzs23xi",
@@ -84,11 +79,15 @@
         {
           "description": "- When resolving a cached value, if the cached value is not present then an exception should be raised unless a default was provided. If a default was provided, it should be returned instead of the expected cached value",
           "name": "#12 - Default Values for \"deferred\": \"cached\""
+        },
+        {
+          "description": "- `.manipulate_image()` should be able to receive upper and lower x and y limits, and set whether to maintain aspect ratio for each limit\n  - Possible implementation: param limits: Sequence[dict[str, Union[str, tuple[Union[int, bool], Union[int, bool]]]]]\n    - Example: [{\"type\": \"min\", \"value\": [200, true]}, {\"type\": \"min\", \"value\": [False, 100]}]\n    - Limits provided in this manner should be processed in order\n",
+          "name": "#11 - Add limits param to `Methods.manipulate_image()`"
         }
       ]
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-28T18:01:20.266Z",
+  "lastEdited": "2023-11-29T16:48:11.792Z",
   "title": "cardcomposer"
 }
