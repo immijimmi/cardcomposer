@@ -335,10 +335,24 @@ class CardFace:
     @staticmethod
     def _step_write_to_cache(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
         # Optional params
-        entries: dict[str] = step["entries"]  # Values to be stored should remain deferred until needed
+        entries: Optional[dict] = step.get(
+            "entries", None
+        )  # Values to be stored should remain deferred until needed
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
         is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
         do_log: bool = card_face.resolve_deferred_value(step.get("do_log", False))
+
+        if entries is not None:
+            if ("key" in step) or ("value" in step):
+                raise ValueError(
+                    f"writing to cache requires either ('key' and 'value') or ('entries') in its parameters; not both"
+                )
+        else:
+            # Required params
+            key = card_face.resolve_deferred_value(step["key"])
+            value = step["value"]  # Value to be stored should remain deferred until needed
+
+            entries = {key: value}
 
         for key, value in entries.items():
             if not is_lazy:  # Resolve value now rather than waiting until it is needed
