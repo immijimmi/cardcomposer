@@ -1,13 +1,11 @@
 {
   "columns": [
     {
+      "cards": [],
       "id": "itzi87y1jxk60w8ppzj0z6tp",
-      "title": "Notes",
-      "cards": []
+      "title": "Notes"
     },
     {
-      "id": "qqlgedz2grcezc5crjqo9jnu",
-      "title": "Ideas",
       "cards": [
         {
           "description": "- Any exceptions thrown due to incorrect step data should indicate where in the data the problem occurred. Preferably as specifically as possible, but more importantly done in a way that does not require constant maintenance.\n  - With that in mind, possibly a try/except around `image = step(image, step, self)` which then catches and re-throws the exception with the additional information that the exception was due to incorrect step data\n  - Alternatively, are there any generic data validation libraries that could be worked with?",
@@ -32,37 +30,45 @@
         {
           "description": "- If label is no longer used to store templates (once template step is added) and is not strictly necessary to save image, it may possibly be removed\n  - Consider whether it is better to remove it and require strings to be passed into each of these steps, or whether to keep and make it mandatory in both steps to standardise its usage as an identifier\n    - Should the image filename be required to be the same as the template name for a CardFace?",
           "name": "#6 (Blocked by #5) - Look Into Deprecating Label Param"
+        },
+        {
+          "description": "Add a way to pass values indicating substrings to highlight into the text step (should support 1) direct substrings, 2) regex, 3) slices). Highlight modes could include: 1) change text colour, 2) colour text background, 3) increase text size/weight",
+          "name": "#13 - Text Highlighting"
+        },
+        {
+          "description": "Should be possible to perform multiple steps in a calculation without having to nest values ideally, to make it a little easier to read.\nProblem is, attempting to write multiple calculations inline makes it unclear which params go into which operation. Perhaps always resolve left-to-right? Worth thinking about whether there are cases where this would be a problem; if so, then a way to parenthesize sections of an inline calc may be necessary. Something like [3, \"*\", \"(\", 2, \"+\", 5, \")\"]? When a parenthesis opening is detected treat this as a sub-calculation (may be possible to resolve recursively). Above example still needs a way to indicate whether each index is a param or an operation",
+          "name": "#14 - Multiple Calculations in Single Calculation Value"
         }
-      ]
+      ],
+      "id": "qqlgedz2grcezc5crjqo9jnu",
+      "title": "Ideas"
     },
     {
+      "cards": [],
       "id": "kz1t457fiblfbas8s7mxs0pj",
-      "title": "Issues",
-      "cards": []
+      "title": "Issues"
     },
     {
+      "cards": [],
       "id": "kpk0wn7cyclskdefovgk84pm",
-      "title": "Icebox",
-      "cards": []
+      "title": "Icebox"
     },
     {
+      "cards": [],
       "id": "s3svm1k7ljtf51in0uzs23xi",
-      "title": "Backlog",
-      "cards": []
+      "title": "Backlog"
     },
     {
+      "cards": [],
       "id": "nqa0263wpbpu6hbjugdg0ny1",
-      "title": "Urgent",
-      "cards": []
+      "title": "Urgent"
     },
     {
+      "cards": [],
       "id": "e5tot30hst4jss96m666k5oo",
-      "title": "Doing",
-      "cards": []
+      "title": "Doing"
     },
     {
-      "id": "t989tdx1pj14i8am5hyftqvd",
-      "title": "Done",
       "cards": [
         {
           "description": "",
@@ -84,10 +90,12 @@
           "description": "- `.manipulate_image()` should be able to receive upper and lower x and y limits, and set whether to maintain aspect ratio for each limit\n  - Possible implementation: param limits: Sequence[dict[str, Union[str, tuple[Union[int, bool], Union[int, bool]]]]]\n    - Example: [{\"type\": \"min\", \"value\": [200, true]}, {\"type\": \"min\", \"value\": [False, 100]}]\n    - Limits provided in this manner should be processed in order\n",
           "name": "#11 - Add limits param to `Methods.manipulate_image()`"
         }
-      ]
+      ],
+      "id": "t989tdx1pj14i8am5hyftqvd",
+      "title": "Done"
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-11-29T16:48:11.792Z",
+  "lastEdited": "2023-12-01T14:33:51.896Z",
   "title": "cardcomposer"
 }
