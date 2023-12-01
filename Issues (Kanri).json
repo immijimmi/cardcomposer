@@ -49,7 +49,12 @@
       "title": "Issues"
     },
     {
-      "cards": [],
+      "cards": [
+        {
+          "description": "Switch cases for each deferred value can be converted into individual 'resolver's, which can be stored in a lookup dict the same as `self.step_handlers`. Then, existing resolvers can be abstracted into an extension like with `CoreSteps`",
+          "name": "#15 - Resolve Deferred Values Using Generic 'Handler'-Style System as with Steps"
+        }
+      ],
       "id": "kpk0wn7cyclskdefovgk84pm",
       "title": "Icebox"
     },
@@ -96,6 +101,6 @@
     }
   ],
   "id": "ik01vu8a0wkvxnd42giodbpf",
-  "lastEdited": "2023-12-01T14:33:51.896Z",
+  "lastEdited": "2023-12-01T21:21:34.235Z",
   "title": "cardcomposer"
 }
