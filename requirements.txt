@@ -1,1 +1,2 @@
 pillow~=10.1.0
+objectextensions~=2.0.2

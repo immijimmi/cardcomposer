@@ -3,6 +3,7 @@ from typing import Optional
 from logging import warning, info
 
 from .cardface import CardFace
+from .coresteps import CoreSteps
 from .constants import Constants
 
 
@@ -59,7 +60,7 @@ class App:
                         templates.append(matching_templates[0])
 
                 if len(templates) == len(templates_labels):  # All templates resolved
-                    cardface = CardFace(
+                    cardface = CardFace.with_extensions(CoreSteps)(
                         label=label, size=size,
                         steps=steps, templates=templates,
                         is_template=is_template
