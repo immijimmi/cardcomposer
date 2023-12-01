@@ -334,33 +334,31 @@ class CardFace:
 
     @staticmethod
     def _step_write_to_cache(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
-        # Required params
-        key = card_face.resolve_deferred_value(step["key"])
-        value = step["value"]  # Value to be stored should remain deferred until needed
-
         # Optional params
+        entries: dict[str] = step["entries"]  # Values to be stored should remain deferred until needed
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
         is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
         do_log: bool = card_face.resolve_deferred_value(step.get("do_log", False))
 
-        if not is_lazy:  # Resolve value now rather than waiting until it is needed
-            value = card_face.resolve_deferred_value(value)
+        for key, value in entries.items():
+            if not is_lazy:  # Resolve value now rather than waiting until it is needed
+                value = card_face.resolve_deferred_value(value)
 
-        if mode == "add":
-            if key in card_face.cache:
-                raise ValueError(f"key already exists in {type(card_face).__name__} cache: {key}")
-        elif mode == "update":
-            if key not in card_face.cache:
-                raise KeyError(f"key not found in {type(card_face).__name__} cache: {key}")
-        elif mode == "add_or_update":
-            pass
-        else:
-            raise ValueError(f"unrecognised write mode: {mode}")
+            if mode == "add":
+                if key in card_face.cache:
+                    raise ValueError(f"key already exists in {type(card_face).__name__} cache: {key}")
+            elif mode == "update":
+                if key not in card_face.cache:
+                    raise KeyError(f"key not found in {type(card_face).__name__} cache: {key}")
+            elif mode == "add_or_update":
+                pass
+            else:
+                raise ValueError(f"unrecognised write mode: {mode}")
 
-        if do_log:
-            info(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
+            if do_log:
+                info(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
 
-        card_face.cache[key] = value
+            card_face.cache[key] = value
 
         return image
 
