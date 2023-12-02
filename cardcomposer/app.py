@@ -4,7 +4,7 @@ from sys import stderr
 import logging
 
 from .cardface import CardFace
-from .coresteps import CoreSteps
+from .extensions import PresetSteps, PresetValues
 from .constants import Constants
 
 
@@ -12,7 +12,7 @@ class App:
     def __init__(self):
         self.logger = logging.getLogger(CardFace.__name__)
         self.logger.addHandler(logging.StreamHandler(stderr))
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         try:
             self.logger.info(f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}...")
@@ -65,7 +65,7 @@ class App:
                         templates.append(matching_templates[0])
 
                 if len(templates) == len(templates_labels):  # All templates resolved
-                    cardface = CardFace.with_extensions(CoreSteps)(
+                    cardface = CardFace.with_extensions(PresetSteps, PresetValues)(
                         label=label, size=size,
                         steps=steps, templates=templates,
                         is_template=is_template,

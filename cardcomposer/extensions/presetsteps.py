@@ -5,28 +5,28 @@ from typing import Optional, Union, Sequence
 from os import path
 from pathlib import Path
 
-from .cardface import CardFace
-from .methods import Methods
+from ..cardface import CardFace
+from ..methods import Methods as CardFaceMethods
 
 
-class CoreSteps(Extension):
+class PresetSteps(Extension):
     @staticmethod
     def can_extend(target_cls):
         return issubclass(target_cls, CardFace)
 
     @staticmethod
     def extend(target_cls):
-        Extension._wrap(target_cls, "__init__", CoreSteps.__wrap_init)
+        Extension._wrap(target_cls, "__init__", PresetSteps.__wrap_init)
 
     @staticmethod
     def __wrap_init(self, *args, **kwargs):
         yield
 
         step_handlers = {
-            "paste_image": CoreSteps.__step_paste_image,
-            "write_to_cache": CoreSteps.__step_write_to_cache,
-            "save": CoreSteps.__step_save,
-            "write_text": CoreSteps.__step_write_text
+            "paste_image": PresetSteps.__step_paste_image,
+            "write_to_cache": PresetSteps.__step_write_to_cache,
+            "save": PresetSteps.__step_save,
+            "write_text": PresetSteps.__step_write_text
         }
 
         for step_name, step_handler in step_handlers.items():
@@ -85,9 +85,9 @@ class CoreSteps(Extension):
         embed_image: Image.Image = card_face.resolve_deferred_value(step["image"])
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
 
-        embed_image = Methods.manipulate_image(
+        embed_image = CardFaceMethods.manipulate_image(
             embed_image,
-            **Methods.unpack_manipulate_image_kwargs(step, card_face)
+            **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
         paste_box = (
@@ -98,7 +98,7 @@ class CoreSteps(Extension):
         )
 
         compatibility_layer = Image.new("RGBA", image.size)
-        compatibility_layer.paste(embed_image, Methods.ensure_ints(paste_box))
+        compatibility_layer.paste(embed_image, CardFaceMethods.ensure_ints(paste_box))
 
         image = Image.alpha_composite(image, compatibility_layer)
         return image
@@ -122,7 +122,7 @@ class CoreSteps(Extension):
         # Required params
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
         text: str = card_face.resolve_deferred_value(step["text"])
-        fill = Methods.coalesce_list_to_tuple(
+        fill = CardFaceMethods.coalesce_list_to_tuple(
             card_face.resolve_deferred_value(step["fill"])
         )
         font: ImageFont = card_face.resolve_deferred_value(step["font"])
@@ -161,9 +161,9 @@ class CoreSteps(Extension):
         # Floats are accepted here for xy
         draw.text(xy=position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
 
-        text_layer = Methods.manipulate_image(
+        text_layer = CardFaceMethods.manipulate_image(
             text_layer,
-            **Methods.unpack_manipulate_image_kwargs(step, card_face)
+            **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
         layer_position = tuple(position) if (layer_position is True) else layer_position
@@ -175,7 +175,7 @@ class CoreSteps(Extension):
         )
 
         compatibility_layer = Image.new("RGBA", image.size)
-        compatibility_layer.paste(text_layer, Methods.ensure_ints(paste_box))
+        compatibility_layer.paste(text_layer, CardFaceMethods.ensure_ints(paste_box))
 
         image = Image.alpha_composite(image, compatibility_layer)
         return image

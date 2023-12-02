@@ -1,9 +1,8 @@
 from objectextensions import Extendable
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image
 
-from typing import Optional, Callable, Any, Sequence, Iterable
+from typing import Optional, Callable, Any, Sequence
 import logging
-import random
 
 from .methods import Methods
 from .enums import StepKey, DeferredValue
@@ -20,6 +19,8 @@ class CardFace(Extendable):
         super().__init__()
 
         self.step_handlers: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {}
+        self.deferred_value_resolvers: dict[str, Callable[[dict[str], "CardFace"], Any]] = {}
+
         """
         The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
         (e.g. the coords of a specific point location on the card). They can be added by specific steps, and may be
@@ -118,12 +119,13 @@ class CardFace(Extendable):
 
     def resolve_deferred_value(self, value):
         """
-        This method should be invoked liberally by step handlers, to decode any values provided in their step data.
+        This method should be invoked liberally by step handlers and deferred value resolvers,
+        to decode any nested values provided in the data they are given.
 
         Responsible for processing any deferred values into a usable form. If the provided data is not a deferred value,
         it will simply be returned as-is.
 
-        Recursively converts sub-values within any dict, list or tuple
+        Recursively converts sub-values within any dict, list or tuple that a deferred value may be resolved into
         """
 
         # To ensure the provided value is not edited in place within this method, a copy is made
@@ -131,155 +133,11 @@ class CardFace(Extendable):
         working_value = Methods.try_copy(value)
 
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
-        while deferred_value := self._deferred_value_type(working_value):
-            if deferred_value == DeferredValue.SELF:
-                working_value = self
-
-            elif deferred_value == DeferredValue.CALCULATION:
-                working_value = self._resolve_calculation(working_value)
-
-            elif deferred_value == DeferredValue.SEEDED_RANDOM:
-                # Required params
-                seed = self.resolve_deferred_value(working_value["seed"])
-
-                # Optional params
-                n: int = self.resolve_deferred_value(working_value.get("n", 0))
-
-                random.seed(seed)
-                for prior_roll in range(n):
-                    random.random()
-
-                working_value = random.random()
-
-            elif deferred_value == DeferredValue.CACHED:
-                # Required params
-                cache_key = self.resolve_deferred_value(working_value["key"])
-
-                try:
-                    working_value = self.cache[cache_key]
-                except KeyError:
-                    if "default" not in working_value:
-                        raise KeyError(f"no value found in cache and no default provided for key: {cache_key}")
-
-                    working_value = working_value["default"]
-
-            elif deferred_value == DeferredValue.CARD_DIMENSION:
-                # Required params
-                dimension: str = self.resolve_deferred_value(working_value["dimension"])
-
-                if dimension == "width":
-                    working_value = self.size[0]
-                elif dimension == "height":
-                    working_value = self.size[1]
-                else:
-                    raise ValueError(f"invalid dimension name received: {dimension}")
-
-            elif deferred_value == DeferredValue.WORKING_IMAGE:
-                working_value = self.working_image
-
-            elif deferred_value == DeferredValue.IMAGE_FROM_FILE:
-                # Required params
-                src: str = self.resolve_deferred_value(working_value["src"])
-
-                working_value = Image.open(src)
-
-            elif deferred_value == DeferredValue.BLANK_IMAGE:
-                # Required params
-                size: tuple[float, float] = self.resolve_deferred_value(working_value["size"])
-
-                working_value = Image.new("RGBA", Methods.ensure_ints(size))
-
-            elif deferred_value == DeferredValue.FONT:
-                # Required params
-                src: str = self.resolve_deferred_value(working_value["src"])
-
-                # Optional params
-                font_type: str = self.resolve_deferred_value(working_value.get("type", "truetype"))
-                size: Optional[int] = self.resolve_deferred_value(working_value.get("size", None))
-                index: Optional[int] = self.resolve_deferred_value(working_value.get("index", None))
-                encoding: Optional[str] = self.resolve_deferred_value(working_value.get("encoding", None))
-
-                font_optional_kwargs = {
-                    key: value for key, value in {
-                        "size": size,
-                        "index": index,
-                        "encoding": encoding
-                    }.items() if value is not None
-                }
-
-                if font_type == "truetype":
-                    working_value = ImageFont.truetype(font=src, **font_optional_kwargs)
-                elif font_type == "bitmap":
-                    """
-                    kwargs are purposefully provided here despite not being expected,
-                    since for a bitmap font they should be empty anyway
-                    """
-                    working_value = ImageFont.load(src, **font_optional_kwargs)
-                else:
-                    raise ValueError(f"invalid font type: {font_type}")
-
-            elif deferred_value == DeferredValue.TEXT_LENGTH:
-                # Required params
-                text: str = self.resolve_deferred_value(working_value["text"])
-                font: ImageFont = self.resolve_deferred_value(working_value["font"])
-
-                # Optional params
-                text_layer: Optional[Image.Image] = self.resolve_deferred_value(working_value.get("text_layer", None))
-                direction: Optional[str] = self.resolve_deferred_value(working_value.get("direction", None))
-                features: Optional[Sequence[str]] = self.resolve_deferred_value(working_value.get("features", None))
-                language: Optional[str] = self.resolve_deferred_value(working_value.get("language", None))
-                embedded_color: Optional[bool] = self.resolve_deferred_value(working_value.get("embedded_color", None))
-
-                textlength_optional_kwargs = {
-                    key: value for key, value in {
-                        "direction": direction,
-                        "features": features,
-                        "language": language,
-                        "embedded_color": embedded_color
-                    }.items() if value is not None
-                }
-
-                text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
-                draw = ImageDraw.Draw(text_layer)
-                working_value = draw.textlength(text=text, font=font, **textlength_optional_kwargs)
-
-            elif deferred_value == DeferredValue.TEXT_BBOX:
-                # Required params
-                position: tuple[float, float] = self.resolve_deferred_value(working_value["position"])
-                text: str = self.resolve_deferred_value(working_value["text"])
-                font: ImageFont = self.resolve_deferred_value(working_value["font"])
-
-                # Optional params
-                text_layer: Optional[Image.Image] = self.resolve_deferred_value(working_value.get("text_layer", None))
-                anchor: Optional[str] = self.resolve_deferred_value(working_value.get("anchor", None))
-                spacing: Optional[float] = self.resolve_deferred_value(working_value.get("spacing", None))
-                align: Optional[str] = self.resolve_deferred_value(working_value.get("align", None))
-                direction: Optional[str] = self.resolve_deferred_value(working_value.get("direction", None))
-                features: Optional[Sequence[str]] = self.resolve_deferred_value(working_value.get("features", None))
-                language: Optional[str] = self.resolve_deferred_value(working_value.get("language", None))
-                stroke_width: Optional[int] = self.resolve_deferred_value(working_value.get("stroke_width", None))
-                embedded_color: Optional[bool] = self.resolve_deferred_value(working_value.get("language", None))
-
-                textbbox_optional_kwargs = {
-                    key: value for key, value in {
-                        "anchor": anchor,
-                        "spacing": spacing,
-                        "align": align,
-                        "direction": direction,
-                        "features": features,
-                        "language": language,
-                        "stroke_width": stroke_width,
-                        "embedded_color": embedded_color
-                    }.items() if value is not None
-                }
-
-                text_layer = Image.new("RGBA", self.working_image.size) if (text_layer is None) else text_layer
-                draw = ImageDraw.Draw(text_layer)
-                # Floats are accepted here for xy
-                working_value = draw.textbbox(xy=position, text=text, font=font, **textbbox_optional_kwargs)
-
+        while deferred_value_type := self._deferred_value_type(working_value):
+            if deferred_value_type in self.deferred_value_resolvers:
+                working_value = self.deferred_value_resolvers[deferred_value_type](working_value, self)
             else:
-                raise NotImplementedError(f"no case implemented to handle deferred value type: {deferred_value}")
+                raise NotImplementedError(f"no resolver found to handle deferred value type: {deferred_value_type}")
 
         # Recursive conversion
         if type(working_value) in (tuple, list):
@@ -294,30 +152,6 @@ class CardFace(Extendable):
                 working_value[key] = self.resolve_deferred_value(item)
 
         return working_value
-
-    def _resolve_calculation(self, calculation: dict[str]):
-        """
-        Invokes a single calculation from a limited list of options, passing in the provided arguments.
-        The provided arguments may themselves be any valid deferred value
-        (further calculations, references to cached values etc.), and are not limited to representing
-        numbers - any types which are valid parameters for the calculation will equally suffice
-        """
-
-        # Required params
-        operands: Iterable = self.resolve_deferred_value(calculation["args"])
-        operation_key: str = self.resolve_deferred_value(calculation["op"])
-
-        # Optional params
-        do_log: bool = self.resolve_deferred_value(calculation.get("do_log", False))
-
-        operands = tuple(operands)
-        operation = Constants.CALCULATIONS_LOOKUP[operation_key]
-        result = operation(*operands)
-
-        if do_log:
-            self.logger.info(f"Performing calculation step: {operation}{operands} -> {result}")
-
-        return result
 
     @staticmethod
     def _deferred_value_type(value) -> Optional[str]:
