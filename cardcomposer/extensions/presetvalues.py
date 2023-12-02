@@ -81,7 +81,7 @@ class PresetValues(Extension):
         result = operation(*operands)
 
         if do_log:
-            card_face.logger.info(f"Performing calculation step: {operation}({operands}) -> {result}")
+            card_face.logger.info(f"Performing calculation step: {operation.__name__}{operands} -> {result}")
 
         return result
 
