@@ -73,7 +73,7 @@ class PresetSteps(Extension):
                 raise ValueError(f"unrecognised write mode: {mode}")
 
             if do_log:
-                card_face.logger.info(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
+                card_face.logger.info(f"Writing to cache (mode='{mode}', is_lazy={is_lazy}): {{{key}: {value}}}")
 
             card_face.cache[key] = value
 

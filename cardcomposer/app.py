@@ -15,14 +15,16 @@ class App:
         self.logger.setLevel(logging.INFO)
 
         try:
-            self.logger.info(f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}...")
+            self.logger.debug(f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}...")
             with open(Constants.CARDS_DATA_MANIFEST_FILE_PATH, "r") as manifest_file:
                 cards_data_files_paths: list[str] = loads(manifest_file.read())
 
             self.logger.info(f"Manifest successfully loaded.")
 
         except FileNotFoundError:
-            self.logger.warning(f"Unable to locate cards data manifest, defaulting to {Constants.DEFAULT_CARDS_DATA_FILE_PATH}")
+            self.logger.warning(
+                f"Unable to locate cards data manifest, defaulting to {Constants.DEFAULT_CARDS_DATA_FILE_PATH}"
+            )
             cards_data_files_paths = [Constants.DEFAULT_CARDS_DATA_FILE_PATH]
 
         # Load cards data from each file

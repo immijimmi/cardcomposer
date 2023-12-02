@@ -5,7 +5,7 @@ from typing import Optional, Callable, Any, Sequence
 import logging
 
 from .methods import Methods
-from .enums import StepKey, DeferredValue
+from .enums import StepKey
 from .constants import Constants
 
 
@@ -77,7 +77,7 @@ class CardFace(Extendable):
         self.cache.clear()
         self.logger.debug(f"{type(self).__name__} cache cleared.")
 
-        self.logger.info(f"Generating new {type(self).__name__} image (label='{self.label}')...")
+        self.logger.debug(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
@@ -96,7 +96,7 @@ class CardFace(Extendable):
 
         try:
             steps_sort_keys.sort(key=lambda step_keys: (step_keys["priority"], step_keys["index"]))
-            self.logger.info(f"Sorted {type(self).__name__} steps.")
+            self.logger.debug(f"Sorted {type(self).__name__} steps.")
         except TypeError:  # Unable to sort by priority
             self.logger.debug(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
@@ -106,7 +106,12 @@ class CardFace(Extendable):
         for step in ordered_steps:
             # Required params
             step_type: str = step[StepKey.TYPE]
-            self.logger.debug(f"Processing {type(self).__name__} step: {step_type}")
+
+            # Optional params
+            do_log: bool = step.get("do_log", False)
+
+            if do_log:
+                self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
 
             step_handler = self.step_handlers[step_type]
             self.working_image = step_handler(self.working_image, step, self)
@@ -114,7 +119,7 @@ class CardFace(Extendable):
         result = self.working_image
         self.working_image = None
 
-        self.logger.info(f"{type(self).__name__} image successfully generated.")
+        self.logger.info(f"{type(self).__name__} image (label='{self.label}') successfully generated.")
         return result
 
     def resolve_deferred_value(self, value):
@@ -135,7 +140,13 @@ class CardFace(Extendable):
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
         while deferred_value_type := self._deferred_value_type(working_value):
             if deferred_value_type in self.deferred_value_resolvers:
+                # Optional params
+                do_log: bool = self.resolve_deferred_value(value.get("do_log", False))
+
                 working_value = self.deferred_value_resolvers[deferred_value_type](working_value, self)
+                if do_log:
+                    self.logger.info(f"Resolved deferred value (type='{deferred_value_type}'): {working_value}")
+
             else:
                 raise NotImplementedError(f"no resolver found to handle deferred value type: {deferred_value_type}")
 
@@ -165,6 +176,4 @@ class CardFace(Extendable):
             return
         if Constants.DEFERRED_TYPE_KEY not in value:
             return
-        if (value_type := value[Constants.DEFERRED_TYPE_KEY]) not in DeferredValue:
-            raise TypeError(f"unrecognised type when evaluating deferred value: {value_type}")
-        return value_type
+        return value[Constants.DEFERRED_TYPE_KEY]
