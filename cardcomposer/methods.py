@@ -112,14 +112,20 @@ class Methods:
                 if resize_to[0] is False:
                     resized_width = image.size[0]
                 elif resize_to[0] is True:
-                    resized_width = image.size[0] * (resize_to[1]/image.size[1])
+                    try:
+                        resized_width = image.size[0] * (resize_to[1] / image.size[1])
+                    except ZeroDivisionError:  # Edge case where the image being resized is 0px tall/wide
+                        resized_width = resize_to[0]
                 else:
                     resized_width = resize_to[0]
 
                 if resize_to[1] is False:
                     resized_height = image.size[1]
                 elif resize_to[1] is True:
-                    resized_height = image.size[1] * (resize_to[0]/image.size[0])
+                    try:
+                        resized_height = image.size[1] * (resize_to[0] / image.size[0])
+                    except ZeroDivisionError:  # Edge case where the image being resized is 0px tall/wide
+                        resized_width = resize_to[0]
                 else:
                     resized_height = resize_to[1]
 
@@ -144,7 +150,10 @@ class Methods:
                 other_dim_index = int(not limited_dim_index)
                 other_dim_value = image.size[other_dim_index]
                 if do_maintain_proportions:
-                    other_dim_resized_value = other_dim_value * (limit_value / limited_dim_value)
+                    try:
+                        other_dim_resized_value = other_dim_value * (limit_value / limited_dim_value)
+                    except ZeroDivisionError:  # Edge case where the image being resized is 0px tall/wide
+                        other_dim_resized_value = other_dim_value
                 else:
                     other_dim_resized_value = other_dim_value
 
