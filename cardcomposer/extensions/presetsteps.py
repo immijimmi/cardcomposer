@@ -128,10 +128,6 @@ class PresetSteps(Extension):
         font: ImageFont = card_face.resolve_deferred_value(step["font"])
 
         # Optional params
-        text_layer: Optional[Image.Image] = card_face.resolve_deferred_value(step.get("text_layer", None))
-        layer_position: Union[tuple[float, float], True] = card_face.resolve_deferred_value(
-            step.get("layer_position", (0, 0))
-        )
         anchor: Optional[str] = card_face.resolve_deferred_value(step.get("anchor", None))
         spacing: Optional[float] = card_face.resolve_deferred_value(step.get("spacing", None))
         align: Optional[str] = card_face.resolve_deferred_value(step.get("align", None))
@@ -155,23 +151,32 @@ class PresetSteps(Extension):
                 "embedded_color": embedded_color
             }.items() if value is not None
         }
+        text_bbox_optional_kwargs = {
+            key: value for key, value in draw_text_optional_kwargs.items()
+            if key not in ["stroke_fill"]
+        }  # `ImageDraw.textbbox()` does not support all kwargs that `ImageDraw.text()` does
 
-        text_layer = Image.new("RGBA", image.size) if (text_layer is None) else text_layer
+        bbox_layer = Image.new("RGB", (0, 0))
+        draw = ImageDraw.Draw(bbox_layer)
+        bbox = draw.textbbox(xy=(0, 0), text=text, font=font, **text_bbox_optional_kwargs)
+
+        text_dimensions = (bbox[2] - bbox[0], bbox[3] - bbox[1])
+        adjusted_text_position = (-bbox[0], -bbox[1])
+
+        text_layer = Image.new("RGBA", text_dimensions)
         draw = ImageDraw.Draw(text_layer)
-        # Floats are accepted here for xy
-        draw.text(xy=position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
+        draw.text(adjusted_text_position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
 
         text_layer = CardFaceMethods.manipulate_image(
             text_layer,
             **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
-        layer_position = tuple(position) if (layer_position is True) else layer_position
         paste_box = (
-            layer_position[0],
-            layer_position[1],
-            layer_position[0] + text_layer.size[0],
-            layer_position[1] + text_layer.size[1]
+            position[0],
+            position[1],
+            position[0] + text_layer.size[0],
+            position[1] + text_layer.size[1]
         )
 
         compatibility_layer = Image.new("RGBA", image.size)

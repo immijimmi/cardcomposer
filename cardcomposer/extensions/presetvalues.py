@@ -166,7 +166,6 @@ class PresetValues(Extension):
         font: ImageFont = card_face.resolve_deferred_value(value["font"])
 
         # Optional params
-        text_layer: Optional[Image.Image] = card_face.resolve_deferred_value(value.get("text_layer", None))
         direction: Optional[str] = card_face.resolve_deferred_value(value.get("direction", None))
         features: Optional[Sequence[str]] = card_face.resolve_deferred_value(value.get("features", None))
         language: Optional[str] = card_face.resolve_deferred_value(value.get("language", None))
@@ -181,19 +180,18 @@ class PresetValues(Extension):
             }.items() if value is not None
         }
 
-        text_layer = Image.new("RGBA", card_face.working_image.size) if (text_layer is None) else text_layer
-        draw = ImageDraw.Draw(text_layer)
+        textlength_layer = Image.new("RGB", (0, 0))
+        draw = ImageDraw.Draw(textlength_layer)
         return draw.textlength(text=text, font=font, **textlength_optional_kwargs)
 
     @staticmethod
     def __resolve_text_bbox(value: dict[str], card_face: "CardFace"):
         # Required params
-        position: tuple[float, float] = card_face.resolve_deferred_value(value["position"])
         text: str = card_face.resolve_deferred_value(value["text"])
         font: ImageFont = card_face.resolve_deferred_value(value["font"])
 
         # Optional params
-        text_layer: Optional[Image.Image] = card_face.resolve_deferred_value(value.get("text_layer", None))
+        position: tuple[float, float] = card_face.resolve_deferred_value(value.get("position", (0, 0)))
         anchor: Optional[str] = card_face.resolve_deferred_value(value.get("anchor", None))
         spacing: Optional[float] = card_face.resolve_deferred_value(value.get("spacing", None))
         align: Optional[str] = card_face.resolve_deferred_value(value.get("align", None))
@@ -216,7 +214,7 @@ class PresetValues(Extension):
             }.items() if value is not None
         }
 
-        text_layer = Image.new("RGBA", card_face.working_image.size) if (text_layer is None) else text_layer
-        draw = ImageDraw.Draw(text_layer)
+        bbox_layer = Image.new("RGB", (0, 0))
+        draw = ImageDraw.Draw(bbox_layer)
         # Floats are accepted here for xy
         return draw.textbbox(xy=position, text=text, font=font, **textbbox_optional_kwargs)
