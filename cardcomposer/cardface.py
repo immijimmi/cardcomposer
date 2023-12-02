@@ -2,7 +2,7 @@ from objectextensions import Extendable
 from PIL import Image, ImageFont, ImageDraw
 
 from typing import Optional, Callable, Any, Sequence, Iterable
-from logging import info, debug
+import logging
 import random
 
 from .methods import Methods
@@ -14,7 +14,8 @@ class CardFace(Extendable):
     def __init__(
             self, label: Optional[str] = None,
             templates: Sequence["CardFace"] = (), size: Optional[tuple[int, int]] = None,
-            steps: Sequence[dict[str]] = (), is_template: bool = False
+            steps: Sequence[dict[str]] = (), is_template: bool = False,
+            logger=None
     ):
         super().__init__()
 
@@ -32,6 +33,8 @@ class CardFace(Extendable):
         self.templates = tuple(templates)
         self.steps = tuple(steps)
         self.is_template = is_template
+
+        self._logger = logger or logging.root
 
         self.size: Optional[tuple[int, int]] = None
         if size:
@@ -62,14 +65,18 @@ class CardFace(Extendable):
                 )
             cumulative_templates_labels.add(template.label)
 
+    @property
+    def logger(self):
+        return self._logger
+
     def generate(self) -> Image.Image:
         if not self.size:
             raise ValueError(f"unable to generate image from {type(self).__name__} (no size set)")
 
         self.cache.clear()
-        debug(f"{type(self).__name__} cache cleared.")
+        self.logger.debug(f"{type(self).__name__} cache cleared.")
 
-        info(f"Generating new {type(self).__name__} image (label='{self.label}')...")
+        self.logger.info(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
@@ -88,9 +95,9 @@ class CardFace(Extendable):
 
         try:
             steps_sort_keys.sort(key=lambda step_keys: (step_keys["priority"], step_keys["index"]))
-            info(f"Sorted {type(self).__name__} steps.")
+            self.logger.info(f"Sorted {type(self).__name__} steps.")
         except TypeError:  # Unable to sort by priority
-            debug(f"Unable to sort {type(self).__name__} steps by priority.")
+            self.logger.debug(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
         ordered_steps = tuple(step_keys["step"] for step_keys in steps_sort_keys)
@@ -98,7 +105,7 @@ class CardFace(Extendable):
         for step in ordered_steps:
             # Required params
             step_type: str = step[StepKey.TYPE]
-            debug(f"Processing {type(self).__name__} step: {step_type}")
+            self.logger.debug(f"Processing {type(self).__name__} step: {step_type}")
 
             step_handler = self.step_handlers[step_type]
             self.working_image = step_handler(self.working_image, step, self)
@@ -106,7 +113,7 @@ class CardFace(Extendable):
         result = self.working_image
         self.working_image = None
 
-        info(f"{type(self).__name__} image successfully generated.")
+        self.logger.info(f"{type(self).__name__} image successfully generated.")
         return result
 
     def resolve_deferred_value(self, value):
@@ -308,7 +315,7 @@ class CardFace(Extendable):
         result = operation(*operands)
 
         if do_log:
-            info(f"Performing calculation step: {operation}{operands} -> {result}")
+            self.logger.info(f"Performing calculation step: {operation}{operands} -> {result}")
 
         return result
 
