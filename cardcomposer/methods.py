@@ -49,7 +49,9 @@ class Methods:
         Unpacks and resolves only the kwargs used in `.manipulate_image()` from the provided data
         """
 
-        crop: Optional[tuple[float, float, float, float]] = card_face.resolve_deferred_value(data.get("crop", None))
+        crop: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[float]]] = (
+            card_face.resolve_deferred_value(data.get("crop", None))
+        )
         scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
             card_face.resolve_deferred_value(data.get("scale", None))
         )
@@ -81,6 +83,18 @@ class Methods:
             opacity: Optional[float] = None
     ) -> Image.Image:
         if crop:
+            crop_working = [*crop]
+
+            if crop[0] is None:
+                crop_working[0] = 0
+            if crop[1] is None:
+                crop_working[1] = 0
+            if crop[2] is None:
+                crop_working[2] = image.size[0]
+            if crop[3] is None:
+                crop_working[3] = image.size[1]
+
+            crop = tuple(crop_working)
             image = image.crop(Methods.ensure_ints(crop))
 
         if scale:
