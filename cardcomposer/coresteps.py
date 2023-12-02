@@ -4,7 +4,6 @@ from PIL import Image, ImageFont, ImageDraw
 from typing import Optional, Union, Sequence
 from os import path
 from pathlib import Path
-from logging import info
 
 from .cardface import CardFace
 from .methods import Methods
@@ -74,7 +73,7 @@ class CoreSteps(Extension):
                 raise ValueError(f"unrecognised write mode: {mode}")
 
             if do_log:
-                info(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
+                card_face.logger.info(f"Writing to cache (mode={mode}, is_lazy={is_lazy}): {{{key}: {value}}}")
 
             card_face.cache[key] = value
 
