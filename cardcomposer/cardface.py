@@ -137,16 +137,20 @@ class CardFace(Extendable):
         # Necessary to ensure due to the recursive nature of this method
         working_value = Methods.try_copy(value)
 
+        # Determining whether to log the resolved value
+        deferred_value_type = self._deferred_value_type(working_value)
+        if deferred_value_type:
+            # Optional params
+            do_log: bool = self.resolve_deferred_value(value.get("do_log", False))
+
+            log_deferred_value_type = deferred_value_type
+        else:
+            do_log = False
+
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
         while deferred_value_type := self._deferred_value_type(working_value):
             if deferred_value_type in self.deferred_value_resolvers:
-                # Optional params
-                do_log: bool = self.resolve_deferred_value(value.get("do_log", False))
-
                 working_value = self.deferred_value_resolvers[deferred_value_type](working_value, self)
-                if do_log:
-                    self.logger.info(f"Resolved deferred value (type='{deferred_value_type}'): {working_value}")
-
             else:
                 raise NotImplementedError(f"no resolver found to handle deferred value type: {deferred_value_type}")
 
@@ -161,6 +165,10 @@ class CardFace(Extendable):
         elif type(working_value) is dict:
             for key, item in working_value.items():
                 working_value[key] = self.resolve_deferred_value(item)
+
+        # Logging
+        if do_log:
+            self.logger.info(f"Resolved deferred value (type='{log_deferred_value_type}'): {working_value}")
 
         return working_value
 
