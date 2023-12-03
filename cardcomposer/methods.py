@@ -2,9 +2,18 @@ from PIL import Image
 
 from typing import Any, Union, Optional, Iterable
 from copy import deepcopy
+import os
 
 
 class Methods:
+    @staticmethod
+    def get_all_files_paths(target_dir: str) -> list[str]:
+        return [
+            os.path.join(dir_path, filename)
+            for (dir_path, dirnames, filenames) in os.walk(target_dir)
+            for filename in filenames
+        ]
+
     @staticmethod
     def try_copy(item: Any) -> Any:
         """

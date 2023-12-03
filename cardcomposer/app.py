@@ -1,10 +1,12 @@
 from json import loads
 from typing import Optional
 from sys import stderr
+import os
 import logging
 
 from .cardface import CardFace
 from .extensions import PresetSteps, PresetValues
+from .methods import Methods
 from .constants import Constants
 
 
@@ -15,9 +17,11 @@ class App:
         self.logger.setLevel(logging.INFO)
 
         try:
-            self.logger.debug(f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}...")
+            self.logger.debug(
+                f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}..."
+            )
             with open(Constants.CARDS_DATA_MANIFEST_FILE_PATH, "r") as manifest_file:
-                cards_data_files_paths: list[str] = loads(manifest_file.read())
+                cards_data_paths: list[str] = loads(manifest_file.read())
 
             self.logger.info(f"Manifest successfully loaded.")
 
@@ -25,7 +29,19 @@ class App:
             self.logger.warning(
                 f"Unable to locate cards data manifest, defaulting to {Constants.DEFAULT_CARDS_DATA_FILE_PATH}"
             )
-            cards_data_files_paths = [Constants.DEFAULT_CARDS_DATA_FILE_PATH]
+            cards_data_paths = [Constants.DEFAULT_CARDS_DATA_FILE_PATH]
+
+        cards_data_files_paths = []
+        # Resolve any entries which reference a directory into a list of .json files it contains, recursively
+        for cards_data_path in cards_data_paths:
+            if os.path.isdir(cards_data_path):
+                all_dir_file_paths = Methods.get_all_files_paths(cards_data_path)
+
+                for file_path in all_dir_file_paths:
+                    if (len(file_path) > 4) and (file_path[-5].lower() == ".json"):
+                        cards_data_files_paths.append(file_path)
+            else:
+                cards_data_files_paths.append(cards_data_path)
 
         # Load cards data from each file
         cards_data: list[dict[str]] = []
