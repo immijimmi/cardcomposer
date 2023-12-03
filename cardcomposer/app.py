@@ -38,7 +38,7 @@ class App:
                 all_dir_file_paths = Methods.get_all_files_paths(cards_data_path)
 
                 for file_path in all_dir_file_paths:
-                    if (len(file_path) > 4) and (file_path[-5].lower() == ".json"):
+                    if (len(file_path) > 4) and (file_path[-5:].lower() == ".json"):
                         cards_data_files_paths.append(file_path)
             else:
                 cards_data_files_paths.append(cards_data_path)
