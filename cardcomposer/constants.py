@@ -17,5 +17,6 @@ class Constants:
         "min": min,
         "max": max,
         "getitem": getitem,
-        "getattr": getattr
+        "getattr": getattr,
+        "str.format": str.format
     }
