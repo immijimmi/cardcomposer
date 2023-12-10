@@ -1,4 +1,5 @@
 from operator import add, mul, sub, truediv, getitem
+from os import path
 
 
 class Constants:
@@ -18,5 +19,6 @@ class Constants:
         "max": max,
         "getitem": getitem,
         "getattr": getattr,
-        "str.format": str.format
+        "str.format": str.format,
+        "path.join": path.join
     }
