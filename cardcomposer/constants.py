@@ -20,5 +20,6 @@ class Constants:
         "getitem": getitem,
         "getattr": getattr,
         "str.format": str.format,
-        "path.join": path.join
+        "path.join": path.join,
+        "if": (lambda is_true, true_val, false_val=None: true_val if is_true else false_val)
     }
