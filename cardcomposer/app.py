@@ -49,6 +49,7 @@ class App:
             with open(file_path, "r") as data_file:
                 file_cards_data: list[dict[str]] = loads(data_file.read())
             cards_data += file_cards_data
+        self.logger.info(f"All card data successfully loaded.")
 
         cardfaces = []
         template_lookup: dict[str, list[CardFace]] = {}
