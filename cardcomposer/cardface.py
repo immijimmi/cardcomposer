@@ -138,7 +138,7 @@ class CardFace(Extendable):
         working_value = Methods.try_copy(value)
 
         # Determining whether to log the resolved value
-        deferred_value_type = self._deferred_value_type(working_value)
+        deferred_value_type = self.deferred_value_type(working_value)
         if deferred_value_type:
             # Optional params
             do_log: bool = self.resolve_deferred_value(value.get("do_log", False))
@@ -148,7 +148,7 @@ class CardFace(Extendable):
             do_log = False
 
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
-        while deferred_value_type := self._deferred_value_type(working_value):
+        while deferred_value_type := self.deferred_value_type(working_value):
             if deferred_value_type in self.deferred_value_resolvers:
                 working_value = self.deferred_value_resolvers[deferred_value_type](working_value, self)
             else:
@@ -173,7 +173,7 @@ class CardFace(Extendable):
         return working_value
 
     @staticmethod
-    def _deferred_value_type(value) -> Optional[str]:
+    def deferred_value_type(value) -> Optional[str]:
         """
         If the provided value represents any of a selection of special types which must be further processed
         to yield usable values, returns the specific type represented.

@@ -5,8 +5,8 @@ from typing import Iterable, Optional, Sequence
 import random
 
 from ..cardface import CardFace
-from ..constants import Constants as CardFaceConstants
 from ..methods import Methods as CardFaceMethods
+from .constants import Constants
 from .enums import DeferredValue
 
 
@@ -77,7 +77,7 @@ class PresetValues(Extension):
         do_log: bool = card_face.resolve_deferred_value(value.get("do_log", False))
 
         operands = tuple(operands)
-        operation = CardFaceConstants.CALCULATIONS_LOOKUP[operation_key]
+        operation = Constants.CALCULATIONS_LOOKUP[operation_key]
         result = operation(*operands)
 
         if do_log:
