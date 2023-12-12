@@ -7,6 +7,7 @@ import random
 
 from ..cardface import CardFace
 from ..methods import Methods as CardFaceMethods
+from ..constants import Constants as CardFaceConstants
 from .constants import Constants
 from .enums import DeferredValue
 
@@ -108,12 +109,18 @@ class PresetValues(Extension):
         map_to: Collection = card_face.resolve_deferred_value(value["map_to"])
         key = card_face.resolve_deferred_value(value["key"])
 
+        # Optional params
+        map_deferred_type: Optional[str] = card_face.resolve_deferred_value(value.get("map_deferred_type", None))
+
         result = []
         for value_to_map in values:
-            copied_map_to = CardFaceMethods.try_copy(map_to)
-            copied_map_to[key] = value_to_map
+            copied_map_target = CardFaceMethods.try_copy(map_to)
+            copied_map_target[key] = value_to_map
 
-            result.append(copied_map_to)
+            if map_deferred_type is not None:
+                copied_map_target[CardFaceConstants.DEFERRED_TYPE_KEY] = map_deferred_type
+
+            result.append(copied_map_target)
 
         return result
 
