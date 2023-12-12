@@ -102,7 +102,7 @@ class App:
                     f" (unable to locate the required templates): {cards_data}"
                 )
 
-        self.logger.info(f"{CardFace.__name__} objects initialised. Total size: {getsizeof(cardfaces)}B")
+        self.logger.info(f"{CardFace.__name__} objects initialised.")
         for cardface in cardfaces:
             if not cardface.is_template:
                 cardface.generate()
