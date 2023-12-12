@@ -6,6 +6,9 @@ class DeferredValue(str, Enum):
     CALCULATION = "calc"
     SEEDED_RANDOM = "seeded"
 
+    # Meta
+    MAPPED = "mapped"
+
     # Shortcut values
     CACHED = "cached"
     CARD_DIMENSION = "card_dim"

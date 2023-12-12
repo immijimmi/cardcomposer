@@ -2,6 +2,7 @@ from objectextensions import Extension
 from PIL import Image, ImageFont, ImageDraw
 
 from typing import Iterable, Optional, Sequence
+from collections.abc import Collection
 import random
 
 from ..cardface import CardFace
@@ -28,6 +29,7 @@ class PresetValues(Extension):
             DeferredValue.CACHED: PresetValues.__resolve_cached,
             DeferredValue.CALCULATION: PresetValues.__resolve_calculation,
             DeferredValue.SEEDED_RANDOM: PresetValues.__resolve_seeded_random,
+            DeferredValue.MAPPED: PresetValues.__resolve_mapped,
             DeferredValue.CARD_DIMENSION: PresetValues.__resolve_card_dimension,
             DeferredValue.WORKING_IMAGE: PresetValues.__resolve_working_image,
             DeferredValue.IMAGE_FROM_FILE: PresetValues.__resolve_image_from_file,
@@ -44,7 +46,7 @@ class PresetValues(Extension):
             self.deferred_value_resolvers[value_type] = value_resolver
 
     @staticmethod
-    def __resolve_self(value: dict[str], card_face: "CardFace"):
+    def __resolve_self(value: dict[str], card_face: "CardFace") -> "CardFace":
         return card_face
 
     @staticmethod
@@ -86,7 +88,7 @@ class PresetValues(Extension):
         return result
 
     @staticmethod
-    def __resolve_seeded_random(value: dict[str], card_face: "CardFace"):
+    def __resolve_seeded_random(value: dict[str], card_face: "CardFace") -> float:
         # Required params
         seed = card_face.resolve_deferred_value(value["seed"])
 
@@ -100,7 +102,23 @@ class PresetValues(Extension):
         return random.random()
 
     @staticmethod
-    def __resolve_card_dimension(value: dict[str], card_face: "CardFace"):
+    def __resolve_mapped(value: dict[str], card_face: "CardFace") -> list[Collection]:
+        # Required params
+        values: Iterable = card_face.resolve_deferred_value(value["values"])
+        map_to: Collection = card_face.resolve_deferred_value(value["map_to"])
+        key = card_face.resolve_deferred_value(value["key"])
+
+        result = []
+        for value_to_map in values:
+            copied_map_to = CardFaceMethods.try_copy(map_to)
+            copied_map_to[key] = value_to_map
+
+            result.append(copied_map_to)
+
+        return result
+
+    @staticmethod
+    def __resolve_card_dimension(value: dict[str], card_face: "CardFace") -> int:
         # Required params
         dimension: str = card_face.resolve_deferred_value(value["dimension"])
 
@@ -112,25 +130,25 @@ class PresetValues(Extension):
             raise ValueError(f"invalid dimension name received: {dimension}")
 
     @staticmethod
-    def __resolve_working_image(value: dict[str], card_face: "CardFace"):
+    def __resolve_working_image(value: dict[str], card_face: "CardFace") -> Image.Image:
         return card_face.working_image
 
     @staticmethod
-    def __resolve_image_from_file(value: dict[str], card_face: "CardFace"):
+    def __resolve_image_from_file(value: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         src: str = card_face.resolve_deferred_value(value["src"])
 
         return Image.open(src)
 
     @staticmethod
-    def __resolve_blank_image(value: dict[str], card_face: "CardFace"):
+    def __resolve_blank_image(value: dict[str], card_face: "CardFace") -> Image.Image:
         # Required params
         size: tuple[float, float] = card_face.resolve_deferred_value(value["size"])
 
         return Image.new("RGBA", CardFaceMethods.ensure_ints(size))
 
     @staticmethod
-    def __resolve_font(value: dict[str], card_face: "CardFace"):
+    def __resolve_font(value: dict[str], card_face: "CardFace") -> ImageFont:
         # Required params
         src: str = card_face.resolve_deferred_value(value["src"])
 
@@ -160,7 +178,7 @@ class PresetValues(Extension):
             raise ValueError(f"invalid font type: {font_type}")
 
     @staticmethod
-    def __resolve_text_length(value: dict[str], card_face: "CardFace"):
+    def __resolve_text_length(value: dict[str], card_face: "CardFace") -> float:
         # Required params
         text: str = card_face.resolve_deferred_value(value["text"])
         font: ImageFont = card_face.resolve_deferred_value(value["font"])
@@ -185,7 +203,7 @@ class PresetValues(Extension):
         return draw.textlength(text=text, font=font, **textlength_optional_kwargs)
 
     @staticmethod
-    def __resolve_text_bbox(value: dict[str], card_face: "CardFace"):
+    def __resolve_text_bbox(value: dict[str], card_face: "CardFace") -> tuple[int, int, int, int]:
         # Required params
         text: str = card_face.resolve_deferred_value(value["text"])
         font: ImageFont = card_face.resolve_deferred_value(value["font"])
