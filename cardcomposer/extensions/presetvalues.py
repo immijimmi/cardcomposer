@@ -72,14 +72,14 @@ class PresetValues(Extension):
         """
 
         # Required params
-        operands: Iterable = card_face.resolve_deferred_value(value["args"])
         operation_key: str = card_face.resolve_deferred_value(value["op"])
+        operands: Iterable = card_face.resolve_deferred_value(value["args"])
 
         # Optional params
         do_log: bool = card_face.resolve_deferred_value(value.get("do_log", False))
 
-        operands = tuple(operands)
         operation = Constants.CALCULATIONS_LOOKUP[operation_key]
+        operands = tuple(operands)
         result = operation(*operands)
 
         if do_log:
