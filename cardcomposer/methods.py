@@ -67,6 +67,9 @@ class Methods:
         resize_to: Optional[tuple[Union[float, bool], Union[float, bool]]] = (
             card_face.resolve_deferred_value(data.get("resize_to", None))
         )
+        rotate: Optional[float] = (
+            card_face.resolve_deferred_value(data.get("rotate", None))
+        )
         limits: Optional[Iterable[dict[str]]] = (
             card_face.resolve_deferred_value(data.get("limits", None))
         )
@@ -78,6 +81,7 @@ class Methods:
             "crop": crop,
             "scale": scale,
             "resize_to": resize_to,
+            "rotate": rotate,
             "limits": limits,
             "opacity": opacity
         }
@@ -87,6 +91,7 @@ class Methods:
             image: Image.Image,
             crop: Optional[tuple[float, float, float, float]] = None,
             scale: Optional[tuple[Union[float, bool], Union[float, bool]]] = None,
+            rotate: Optional[float] = None,
             resize_to: Optional[tuple[Union[float, bool], Union[float, bool]]] = None,
             limits: Optional[Iterable[dict[str]]] = None,
             opacity: Optional[float] = None
@@ -127,6 +132,10 @@ class Methods:
                 new_image_size = (scaled_width, scaled_height)
                 # Resampling.LANCZOS is the highest quality but lowest performance (most time-consuming) option
                 image = image.resize(Methods.ensure_ints(new_image_size), resample=Image.Resampling.LANCZOS)
+
+        if rotate is not None:
+            # Resampling.BICUBIC is the highest quality option available for this method
+            image = image.rotate(angle=rotate, resample=Image.Resampling.BICUBIC, expand=True)
 
         if resize_to:
             if (type(resize_to[0]) is bool) and (type(resize_to[1]) is bool):
