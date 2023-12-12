@@ -105,9 +105,9 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_mapped(value: dict[str], card_face: "CardFace") -> list[Collection]:
         # Required params
-        values: Iterable = card_face.resolve_deferred_value(value["values"])
         map_to: Collection = card_face.resolve_deferred_value(value["map_to"])
         key = card_face.resolve_deferred_value(value["key"])
+        values: Iterable = card_face.resolve_deferred_value(value["values"])
 
         # Optional params
         map_deferred_type: Optional[str] = card_face.resolve_deferred_value(value.get("map_deferred_type", None))
