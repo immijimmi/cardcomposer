@@ -1,6 +1,6 @@
 from json import loads
 from typing import Optional
-from sys import stderr
+from sys import stderr, getsizeof
 import os
 import logging
 
@@ -49,7 +49,7 @@ class App:
             with open(file_path, "r") as data_file:
                 file_cards_data: list[dict[str]] = loads(data_file.read())
             cards_data += file_cards_data
-        self.logger.info(f"All card data successfully loaded.")
+        self.logger.info(f"All card data successfully loaded. Total size: {getsizeof(cards_data)}B")
 
         cardfaces = []
         template_lookup: dict[str, list[CardFace]] = {}
@@ -102,6 +102,7 @@ class App:
                     f" (unable to locate the required templates): {cards_data}"
                 )
 
+        self.logger.info(f"{CardFace.__name__} objects initialised. Total size: {getsizeof(cardfaces)}B")
         for cardface in cardfaces:
             if not cardface.is_template:
                 cardface.generate()
