@@ -1,12 +1,13 @@
 from objectextensions import Extension
 from PIL import Image, ImageFont, ImageDraw
 
-from typing import Optional, Union, Sequence
+from typing import Optional, Sequence
 from os import path
 from pathlib import Path
 
 from ..cardface import CardFace
 from ..methods import Methods as CardFaceMethods
+from .methods import Methods
 
 
 class PresetSteps(Extension):
@@ -85,11 +86,16 @@ class PresetSteps(Extension):
         embed_image: Image.Image = card_face.resolve_deferred_value(step["image"])
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
 
+        # Optional params
+        is_position_centre: Optional[bool] = card_face.resolve_deferred_value(step.get("is_position_centre", None))
+
         embed_image = CardFaceMethods.manipulate_image(
             embed_image,
             **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
+        if is_position_centre:
+            position = Methods.reposition_centre_to_topleft(position, embed_image)
         paste_box = (
             position[0],
             position[1],
@@ -128,6 +134,7 @@ class PresetSteps(Extension):
         font: ImageFont = card_face.resolve_deferred_value(step["font"])
 
         # Optional params
+        is_position_centre: Optional[bool] = card_face.resolve_deferred_value(step.get("is_position_centre", None))
         anchor: Optional[str] = card_face.resolve_deferred_value(step.get("anchor", None))
         spacing: Optional[float] = card_face.resolve_deferred_value(step.get("spacing", None))
         align: Optional[str] = card_face.resolve_deferred_value(step.get("align", None))
@@ -172,6 +179,8 @@ class PresetSteps(Extension):
             **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
+        if is_position_centre:
+            position = Methods.reposition_centre_to_topleft(position, text_layer)
         paste_box = (
             position[0],
             position[1],
