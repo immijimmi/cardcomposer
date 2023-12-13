@@ -2,6 +2,7 @@ from PIL import Image
 
 from typing import Any, Union, Optional, Iterable
 from copy import deepcopy
+from math import ceil
 import os
 
 
@@ -32,6 +33,10 @@ class Methods:
         - Integer values are a requirement
         - Losing float precision is acceptable
 
+        Rounding is implemented half-up rather than the default banker's rounding, as preventing the standard deviation
+        of the provided numbers from increasing is considered more important for the purposes of this project
+        (image manipulation) than preventing their average from drifting.
+
         Should be invoked as late as possible to minimise loss of precision.
         If the provided data is not a tuple or list of only numbers, it will be returned as-is
         """
@@ -43,7 +48,14 @@ class Methods:
             if type(number) not in (float, int):
                 return numbers
 
-        return tuple(round(number) for number in numbers)
+        result = []
+        for number in numbers:
+            if number % 1 == 0.5:
+                result.append(ceil(number))
+            else:
+                result.append(round(number))
+
+        return tuple(result)
 
     @staticmethod
     def coalesce_list_to_tuple(value):
