@@ -135,7 +135,8 @@ class Methods:
 
         if rotate is not None:
             # Resampling.BICUBIC is the highest quality option available for this method
-            image = image.rotate(angle=rotate, resample=Image.Resampling.BICUBIC, expand=True)
+            # `rotate` is inverted here because for some reason `image.rotate()` rotates counter-clockwise
+            image = image.rotate(angle=-rotate, resample=Image.Resampling.BICUBIC, expand=True)
 
         if resize_to:
             if (type(resize_to[0]) is bool) and (type(resize_to[1]) is bool):
