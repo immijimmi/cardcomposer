@@ -1,6 +1,8 @@
 from operator import add, mul, sub, truediv, getitem
 from os import path
 
+from .methods import Methods
+
 
 class Constants:
     CALCULATIONS_LOOKUP = {
@@ -16,6 +18,6 @@ class Constants:
         "getattr": getattr,
         "str.format": str.format,
         "path.join": path.join,
-        "if": (lambda is_true, true_val, false_val=None: true_val if is_true else false_val),
+        "if": Methods.calc_if,
         "contains": (lambda container, val: val in container)
     }

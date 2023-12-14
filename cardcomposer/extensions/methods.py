@@ -13,3 +13,10 @@ class Methods:
             position[0] - (image.size[0]/2),
             position[1] - (image.size[1]/2)
         )
+
+    @staticmethod
+    def calc_if(is_truthy, true_value=None, false_value=None):
+        if is_truthy:
+            return (True if true_value is None else true_value)
+        else:
+            return (False if false_value is None else false_value)
