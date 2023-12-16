@@ -116,6 +116,7 @@ class PresetSteps(Extension):
         filename: str = card_face.resolve_deferred_value(step.get("filename", card_face.label or "card"))
         extension: str = card_face.resolve_deferred_value(step.get("extension", ".tif"))
 
+        filename = Methods.sanitise_filename(filename)
         full_path = path.join(file_path, filename + extension)
 
         Path(file_path).mkdir(parents=True, exist_ok=True)

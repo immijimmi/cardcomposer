@@ -1,5 +1,7 @@
 from PIL import Image
 
+import re
+
 
 class Methods:
     @staticmethod
@@ -20,3 +22,13 @@ class Methods:
             return (True if true_value is None else true_value)
         else:
             return (False if false_value is None else false_value)
+
+    @staticmethod
+    def sanitise_filename(filename: str) -> str:
+        pattern = re.compile(
+            "|".join(
+                (r"\\", "/", ":", r"\*", r"\?", "\"", "<", ">", r"\|")
+            )
+        )
+
+        return pattern.sub("", filename)
