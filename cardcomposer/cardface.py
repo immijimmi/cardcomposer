@@ -95,9 +95,6 @@ class CardFace(Extendable):
         if not self.size:
             raise ValueError(f"unable to generate image from {type(self).__name__} (no size set)")
 
-        self.cache.clear()
-        self.logger.debug(f"{type(self).__name__} cache cleared.")
-
         self.logger.debug(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
 
@@ -139,6 +136,9 @@ class CardFace(Extendable):
 
         result = self.working_image
         self.working_image = None
+
+        self.cache.clear()
+        self.logger.debug(f"{type(self).__name__} cache cleared.")
 
         self.logger.info(f"{type(self).__name__} image (label='{self.label}') successfully generated.")
         return result
