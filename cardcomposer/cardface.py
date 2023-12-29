@@ -12,8 +12,9 @@ from .constants import Constants
 class CardFace(Extendable):
     def __init__(
             self, label: Optional[str] = None,
-            templates: Sequence["CardFace"] = (), size: Optional[tuple[int, int]] = None,
-            steps: Sequence[dict[str]] = (), is_template: bool = False,
+            templates_labels: Sequence[str] = (), steps: Sequence[dict[str]] = (),
+            size: Optional[tuple[int, int]] = None,
+            is_template: bool = False, templates_pool: dict[str, "CardFace"] = {},
             logger=None
     ):
         super().__init__()
@@ -23,41 +24,47 @@ class CardFace(Extendable):
 
         """
         The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
-        (e.g. the coords of a specific point location on the card). They can be added by specific steps, and may be
-        read during any subsequent steps once added
+        (e.g. the coords of a specific point location on the card). They can be added by specific steps, and read during
+        any subsequent steps once added
         """
         self.cache: dict[str] = {}
         # Stores a reference to the image being generated during `.generate()`
         self.working_image: Optional[Image.Image] = None
 
         self.label = label
-        self.templates = tuple(templates)
+        self.templates_labels = tuple(templates_labels)
         self.steps = tuple(steps)
         self.is_template = is_template
+        self.templates_pool = templates_pool
+        self.logger = logger or logging.root
 
-        self._logger = logger or logging.root
+        self._size: Optional[tuple[int, int]] = tuple(size) if size else None
 
-        self.size: Optional[tuple[int, int]] = None
-        if size:
-            self.size = tuple(size)
-        else:
-            for template in self.templates:  # Go through templates in order, to search for a size value to use
-                if template.size:
-                    self.size = tuple(template.size)
-                    break
+        # Add to templates pool, if this object is a template
+        if self.is_template:
+            if self.label in self.templates_pool:
+                raise ValueError(
+                    f"unable to add {type(self).__name__} to templates pool"
+                    f" (a template with the same label already exists): {self.label}"
+                )
+            self.templates_pool[self.label] = self
 
-        self.cumulative_templates = (
-            *(sub_template for template in templates for sub_template in template.cumulative_templates),
-            *self.templates
-        )
-        self.cumulative_steps = (
-            *(step for template in templates for step in template.cumulative_steps),
-            *self.steps
-        )
+    @property
+    def templates(self) -> tuple["CardFace"]:
+        return tuple(self.templates_pool[template_label] for template_label in self.templates_labels)
+
+    @property
+    def cumulative_templates(self) -> tuple["CardFace"]:
+        result = []
+
+        for template in self.templates:
+            for sub_template in template.cumulative_templates:
+                result.append(sub_template)
+            result.append(template)
 
         # Validating templates, to prevent a template being passed in at multiple points and duplicating its steps
         cumulative_templates_labels = set()
-        for template in self.cumulative_templates:
+        for template in result:
             if template.label in cumulative_templates_labels:
                 raise ValueError(
                     f"two templates with the same label ({template.label})"
@@ -66,9 +73,23 @@ class CardFace(Extendable):
                 )
             cumulative_templates_labels.add(template.label)
 
+        return tuple(result)
+
     @property
-    def logger(self):
-        return self._logger
+    def cumulative_steps(self) -> tuple[dict[str]]:
+        return tuple((
+            *(step for template in self.templates for step in template.cumulative_steps),
+            *self.steps
+        ))
+
+    @property
+    def size(self) -> Optional[tuple[int, int]]:
+        if self._size is None:
+            # Go through templates from latest to earliest, to search for a size value to use
+            for template in reversed(self.templates):
+                if template.size is not None:
+                    return template.size
+        return self._size
 
     def generate(self) -> Image.Image:
         if not self.size:
