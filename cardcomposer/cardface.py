@@ -16,7 +16,7 @@ class CardFace(Extendable):
             templates_labels: Union[Deferred, Iterable[CardFaceLabel]] = (),
             steps: Iterable[Step] = (),
             size: Union[Deferred, Optional[tuple[int, int]]] = None,
-            is_template: Union[Deferred, bool] = False,
+            is_template: Union[Deferred, bool] = True,
             templates_pool: Union[Deferred, dict[CardFaceLabel, "CardFace"]] = {},
             config: Optional[dict[str]] = None,
             logger=None

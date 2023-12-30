@@ -68,7 +68,7 @@ class App:
             size: Union[Deferred, Optional[tuple[int, int]]] = cardface_data.get("size")
             templates_labels: Union[Deferred, tuple[CardFaceLabel, ...]] = cardface_data.get("templates", ())
             steps: tuple[Step, ...] = cardface_data.get("steps", ())
-            is_template: Union[Deferred, bool] = cardface_data.get("is_template", False)
+            is_template: Union[Deferred, bool] = cardface_data.get("is_template", True)
 
             cardface = CardFace.with_extensions(PresetSteps, PresetValues)(
                 label=label,
