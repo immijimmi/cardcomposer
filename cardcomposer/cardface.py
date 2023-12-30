@@ -73,6 +73,7 @@ class CardFace(Extendable):
                 if sub_template.label not in cumulative_templates_labels:  # Not a duplicate template
                     result.append(sub_template)
                     cumulative_templates_labels.add(sub_template.label)
+
             if template.label not in cumulative_templates_labels:  # Not a duplicate template
                 result.append(template)
                 cumulative_templates_labels.add(template.label)
