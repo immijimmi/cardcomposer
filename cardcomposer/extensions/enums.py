@@ -10,7 +10,8 @@ class DeferredValue(str, Enum):
     MAPPED = "mapped"
 
     # Shortcut values
-    CACHED = "cached"
+    CONFIG = "config",
+    CACHED = "cached",
     CARD_DIMENSION = "card_dim"
     WORKING_IMAGE = "working_image"
 
