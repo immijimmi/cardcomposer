@@ -6,7 +6,7 @@ from collections.abc import Collection
 import random
 
 from ..cardface import CardFace
-from ..types import Deferred
+from ..types import Deferred, CardFaceLabel
 from ..methods import Methods as CardFaceMethods
 from ..enums import GenericKey, DeferredKey
 from .constants import Constants
@@ -37,6 +37,7 @@ class PresetValues(Extension):
             DeferredValue.WORKING_IMAGE: PresetValues.__resolve_working_image,
             DeferredValue.IMAGE_FROM_FILE: PresetValues.__resolve_image_from_file,
             DeferredValue.BLANK_IMAGE: PresetValues.__resolve_blank_image,
+            DeferredValue.IMAGE_FROM_TEMPLATE: PresetValues.__resolve_image_from_template,
             DeferredValue.FONT: PresetValues.__resolve_font,
             DeferredValue.TEXT_LENGTH: PresetValues.__resolve_text_length,
             DeferredValue.TEXT_BBOX: PresetValues.__resolve_text_bbox
@@ -159,6 +160,13 @@ class PresetValues(Extension):
         size: tuple[float, float] = card_face.resolve_deferred_value(value["size"])
 
         return Image.new("RGBA", CardFaceMethods.ensure_ints(size))
+
+    @staticmethod
+    def __resolve_image_from_template(value: Deferred, card_face: "CardFace") -> Optional[Image.Image]:
+        # Required params
+        label: CardFaceLabel = card_face.resolve_deferred_value(value["label"])
+
+        return card_face.templates_pool[label].generate()
 
     @staticmethod
     def __resolve_font(value: Deferred, card_face: "CardFace") -> ImageFont:
