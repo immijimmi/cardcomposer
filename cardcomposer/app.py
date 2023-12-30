@@ -36,7 +36,7 @@ class App:
         try:
             self.logger.debug(f"Attempting to load config from {Constants.CONFIG_FILE_PATH}...")
             with open(Constants.CONFIG_FILE_PATH, "r") as config_file:
-                config = loads(config_file.read())
+                config: dict[str] = loads(config_file.read())
             self.logger.info(f"Config successfully loaded.")
         except FileNotFoundError:
             self.logger.warning(f"Unable to locate config file, defaulting to empty config.")
@@ -58,8 +58,14 @@ class App:
         cards_data: list[dict[str]] = []
         for file_path in cards_data_files_paths:
             with open(file_path, "r") as data_file:
-                file_cards_data: list[dict[str]] = loads(data_file.read())
-            cards_data += file_cards_data
+                file_cards_data: Union[dict[str], list[dict[str]]] = loads(data_file.read())
+
+            if type(file_cards_data) is list:
+                cards_data += file_cards_data
+            elif type(file_cards_data) is dict:
+                cards_data.append(file_cards_data)
+            else:
+                raise TypeError(f"invalid card data: {file_cards_data}")
         self.logger.info(f"All card data successfully loaded. Total size: {getsizeof(cards_data)}B")
 
         cardfaces = []
