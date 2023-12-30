@@ -18,6 +18,7 @@ class CardFace(Extendable):
             size: Union[Deferred, Optional[tuple[int, int]]] = None,
             is_template: Union[Deferred, bool] = True,
             templates_pool: Union[Deferred, dict[CardFaceLabel, "CardFace"]] = {},
+            do_allow_generation: Union[Deferred, bool] = True,
             config: Optional[dict[str]] = None,
             logger=None
     ):
@@ -39,6 +40,7 @@ class CardFace(Extendable):
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
         self.steps: tuple[Step, ...] = tuple(steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
+        self.do_allow_generation: bool = self.resolve_deferred_value(do_allow_generation)
         self.config: dict[str] = config or {}
         self.logger = logger or logging.root
 
@@ -97,8 +99,11 @@ class CardFace(Extendable):
         return self._size
 
     def generate(self) -> Optional[Image.Image]:
+        if not self.do_allow_generation:
+            self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) skipped.")
+
         if not self.size:
-            self.logger.debug(f"unable to generate image from {type(self).__name__} (label={self.label}): no size set")
+            self.logger.debug(f"Unable to generate image from {type(self).__name__} (label={self.label}); No size set.")
             return None
 
         self.cache.clear()
@@ -141,7 +146,6 @@ class CardFace(Extendable):
 
             if not do_step:
                 continue
-
             if do_log:
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
 
@@ -164,6 +168,7 @@ class CardFace(Extendable):
         self.logger.debug(f"{type(self).__name__} cache cleared (post-generation).")
 
         if steps_completed == 0:
+            self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) cancelled.")
             return None  # No image is returned if no processing was completed
 
         self.logger.info(f"{type(self).__name__} image (label='{self.label}') successfully generated.")
