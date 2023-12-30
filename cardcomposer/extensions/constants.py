@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, getitem
+from operator import add, mul, sub, truediv, getitem, eq
 from os import path
 
 from .methods import Methods
@@ -20,5 +20,6 @@ class Constants:
         "path.join": path.join,
         "if": Methods.calc_if,
         "contains": (lambda container, val: val in container),
-        "not": (lambda val: not val)
+        "not": (lambda val: not val),
+        "eq": eq
     }
