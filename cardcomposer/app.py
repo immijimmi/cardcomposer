@@ -69,6 +69,7 @@ class App:
             templates_labels: Union[Deferred, tuple[CardFaceLabel, ...]] = cardface_data.get("templates", ())
             steps: tuple[Step, ...] = cardface_data.get("steps", ())
             is_template: Union[Deferred, bool] = cardface_data.get("is_template", True)
+            do_skip_generation: Union[Deferred, bool] = cardface_data.get("do_skip_generation", False)
 
             cardface = CardFace.with_extensions(PresetSteps, PresetValues)(
                 label=label,
@@ -76,6 +77,7 @@ class App:
                 steps=steps,
                 size=size,
                 is_template=is_template,
+                do_skip_generation=do_skip_generation,
                 config=config,
                 logger=self.logger
             )
