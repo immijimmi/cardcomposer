@@ -19,5 +19,6 @@ class Constants:
         "str.format": str.format,
         "path.join": path.join,
         "if": Methods.calc_if,
-        "contains": (lambda container, val: val in container)
+        "contains": (lambda container, val: val in container),
+        "not": (lambda val: not val)
     }
