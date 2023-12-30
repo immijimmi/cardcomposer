@@ -149,8 +149,12 @@ class CardFace(Extendable):
             try:
                 self.working_image = step_handler(self.working_image, step, self)
                 steps_completed += 1
-            except StopIteration:  # This indicates that any further processing should cease
+            # This indicates that any further processing should cease
+            except StopIteration:
                 break
+            # This indicates that any further processing should cease, and nothing be returned
+            except NotImplementedError:
+                steps_completed = 0
 
         result = self.working_image
         self.working_image = None

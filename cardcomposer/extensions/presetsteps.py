@@ -30,7 +30,8 @@ class PresetSteps(Extension):
             "write_to_cache": PresetSteps.__step_write_to_cache,
             "save": PresetSteps.__step_save,
             "write_text": PresetSteps.__step_write_text,
-            "stop": PresetSteps.__step_stop
+            "stop": PresetSteps.__step_stop,
+            "cancel": PresetSteps.__step_cancel
         }
 
         for step_name, step_handler in step_handlers.items():
@@ -201,3 +202,7 @@ class PresetSteps(Extension):
     @staticmethod
     def __step_stop(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
         raise StopIteration
+
+    @staticmethod
+    def __step_cancel(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
+        raise NotImplementedError
