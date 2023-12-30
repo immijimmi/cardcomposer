@@ -67,29 +67,22 @@ class CardFace(Extendable):
     @property
     def cumulative_templates(self) -> tuple["CardFace", ...]:
         result = []
-
+        cumulative_templates_labels = set()
         for template in self.templates:
             for sub_template in template.cumulative_templates:
-                result.append(sub_template)
-            result.append(template)
-
-        # Validating templates, to prevent a template being passed in at multiple points and duplicating its steps
-        cumulative_templates_labels = set()
-        for template in result:
-            if template.label in cumulative_templates_labels:
-                raise ValueError(
-                    f"two templates with the same label ({template.label})"
-                    f" passed to {type(self).__name__} object."
-                    f" {type(self).__name__} object label: {self.label}"
-                )
-            cumulative_templates_labels.add(template.label)
+                if sub_template.label not in cumulative_templates_labels:  # Not a duplicate template
+                    result.append(sub_template)
+                    cumulative_templates_labels.add(sub_template)
+            if template.label not in cumulative_templates_labels:  # Not a duplicate template
+                result.append(template)
+                cumulative_templates_labels.add(template)
 
         return tuple(result)
 
     @property
     def cumulative_steps(self) -> tuple[Step, ...]:
         return tuple((
-            *(step for template in self.templates for step in template.cumulative_steps),
+            *(step for template in self.cumulative_templates for step in template.steps),
             *self.steps
         ))
 
