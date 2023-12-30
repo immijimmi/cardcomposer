@@ -155,6 +155,7 @@ class CardFace(Extendable):
             # This indicates that any further processing should cease, and nothing be returned
             except NotImplementedError:
                 steps_completed = 0
+                break
 
         result = self.working_image
         self.working_image = None
