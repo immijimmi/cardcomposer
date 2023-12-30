@@ -102,7 +102,7 @@ class CardFace(Extendable):
             return None
 
         self.cache.clear()
-        self.logger.debug(f"{type(self).__name__} cache cleared.")
+        self.logger.debug(f"{type(self).__name__} cache cleared (pre-generation).")
 
         self.logger.debug(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
@@ -161,7 +161,7 @@ class CardFace(Extendable):
         self.working_image = None
 
         self.cache.clear()
-        self.logger.debug(f"{type(self).__name__} cache cleared.")
+        self.logger.debug(f"{type(self).__name__} cache cleared (post-generation).")
 
         if steps_completed == 0:
             return None  # No image is returned if no processing was completed
