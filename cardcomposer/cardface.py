@@ -101,6 +101,7 @@ class CardFace(Extendable):
     def generate(self) -> Optional[Image.Image]:
         if self.do_skip_generation:
             self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) skipped.")
+            return None
 
         if not self.size:
             self.logger.debug(f"Unable to generate image from {type(self).__name__} (label={self.label}); No size set.")
