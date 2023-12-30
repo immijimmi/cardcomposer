@@ -1,12 +1,14 @@
 from objectextensions import Extension
 from PIL import Image, ImageFont, ImageDraw
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union, Any
 from os import path
 from pathlib import Path
 
 from ..cardface import CardFace
+from ..types import Deferred, Step
 from ..methods import Methods as CardFaceMethods
+from ..enums import GenericKey
 from .methods import Methods
 
 
@@ -37,14 +39,14 @@ class PresetSteps(Extension):
             self.step_handlers[step_name] = step_handler
 
     @staticmethod
-    def __step_write_to_cache(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def __step_write_to_cache(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
         # Optional params
         entries: Optional[dict] = step.get(
             "entries", None
         )  # Values to be stored should remain deferred until needed
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
         is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
-        do_log: bool = card_face.resolve_deferred_value(step.get("do_log", False))
+        do_log: bool = card_face.resolve_deferred_value(step.get(GenericKey.DO_LOG, False))
 
         if entries is not None:
             if ("key" in step) or ("value" in step):
@@ -54,7 +56,7 @@ class PresetSteps(Extension):
         else:
             # Required params
             key = card_face.resolve_deferred_value(step["key"])
-            value = step["value"]  # Value to be stored should remain deferred until needed
+            value: Union[Deferred, Any] = step["value"]  # Value to be stored should remain deferred until needed
 
             entries = {key: value}
 
@@ -81,7 +83,7 @@ class PresetSteps(Extension):
         return image
 
     @staticmethod
-    def __step_paste_image(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def __step_paste_image(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
         # Required params
         embed_image: Image.Image = card_face.resolve_deferred_value(step["image"])
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
@@ -110,7 +112,7 @@ class PresetSteps(Extension):
         return image
 
     @staticmethod
-    def __step_save(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def __step_save(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
         # Optional params
         file_path: str = card_face.resolve_deferred_value(step.get("path", "Cards"))
         filename: str = card_face.resolve_deferred_value(step.get("filename", card_face.label or "card"))
@@ -125,7 +127,7 @@ class PresetSteps(Extension):
         return image
 
     @staticmethod
-    def __step_write_text(image: Image.Image, step: dict[str], card_face: "CardFace") -> Image.Image:
+    def __step_write_text(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
         # Required params
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
         text: str = card_face.resolve_deferred_value(step["text"])

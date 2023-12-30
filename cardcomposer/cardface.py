@@ -1,44 +1,53 @@
 from objectextensions import Extendable
 from PIL import Image
 
-from typing import Optional, Callable, Any, Sequence
+from typing import Optional, Callable, Any, Union, Iterable
 import logging
 
 from .methods import Methods
-from .enums import StepKey
-from .constants import Constants
+from .enums import GenericKey, DeferredKey, StepKey
+from .types import Deferred, Step, CardFaceLabel
 
 
 class CardFace(Extendable):
     def __init__(
-            self, label: Optional[str] = None,
-            templates_labels: Sequence[str] = (), steps: Sequence[dict[str]] = (),
-            size: Optional[tuple[int, int]] = None,
-            is_template: bool = False, templates_pool: dict[str, "CardFace"] = {},
+            self,
+            label: Union[Deferred, CardFaceLabel] = None,
+            templates_labels: Union[Deferred, Iterable[CardFaceLabel]] = (),
+            steps: Iterable[Step] = (),
+            size: Union[Deferred, Optional[tuple[int, int]]] = None,
+            is_template: Union[Deferred, bool] = False,
+            templates_pool: Union[Deferred, dict[CardFaceLabel, "CardFace"]] = {},
             logger=None
     ):
         super().__init__()
 
         self.step_handlers: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {}
-        self.deferred_value_resolvers: dict[str, Callable[[dict[str], "CardFace"], Any]] = {}
+        self.deferred_value_resolvers: dict[str, Callable[[Deferred, "CardFace"], Any]] = {}
 
         """
         The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
         (e.g. the coords of a specific point location on the card). They can be added by specific steps, and read during
         any subsequent steps once added
         """
-        self.cache: dict[str] = {}
+        self.cache = {}
         # Stores a reference to the image being generated during `.generate()`
         self.working_image: Optional[Image.Image] = None
 
-        self.label = label
-        self.templates_labels = tuple(templates_labels)
-        self.steps = tuple(steps)
-        self.is_template = is_template
-        self.templates_pool = templates_pool
+        self.label: CardFaceLabel = self.resolve_deferred_value(label)
+        self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
+        self.steps: tuple[Step, ...] = tuple(steps)
+        self.is_template: bool = self.resolve_deferred_value(is_template)
         self.logger = logger or logging.root
 
-        self._size: Optional[tuple[int, int]] = tuple(size) if size else None
+        self.templates_pool: dict[CardFaceLabel, "CardFace"]
+        if self.deferred_value_type(templates_pool):
+            self.templates_pool = self.resolve_deferred_value(templates_pool)
+        else:
+            # Done this way to prevent the object identity of the templates pool from changing if it isn't deferred
+            self.templates_pool = templates_pool
+
+        self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
 
         # Add to templates pool, if this object is a template
         if self.is_template:
@@ -50,11 +59,11 @@ class CardFace(Extendable):
             self.templates_pool[self.label] = self
 
     @property
-    def templates(self) -> tuple["CardFace"]:
+    def templates(self) -> tuple["CardFace", ...]:
         return tuple(self.templates_pool[template_label] for template_label in self.templates_labels)
 
     @property
-    def cumulative_templates(self) -> tuple["CardFace"]:
+    def cumulative_templates(self) -> tuple["CardFace", ...]:
         result = []
 
         for template in self.templates:
@@ -76,7 +85,7 @@ class CardFace(Extendable):
         return tuple(result)
 
     @property
-    def cumulative_steps(self) -> tuple[dict[str]]:
+    def cumulative_steps(self) -> tuple[Step, ...]:
         return tuple((
             *(step for template in self.templates for step in template.cumulative_steps),
             *self.steps
@@ -95,11 +104,14 @@ class CardFace(Extendable):
         if not self.size:
             raise ValueError(f"unable to generate image from {type(self).__name__} (no size set)")
 
+        self.cache.clear()
+        self.logger.debug(f"{type(self).__name__} cache cleared.")
+
         self.logger.debug(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
-        steps_sort_keys: list[dict[str, Any]] = []
+        steps_sort_keys: list[dict[str]] = []
         for step_index, step in enumerate(self.cumulative_steps):
             # Optional params
             """
@@ -108,7 +120,7 @@ class CardFace(Extendable):
             Any comparable set of values (numbers or not) are valid.
             If provided priorities are not comparable, priority will not be used at all
             """
-            step_priority = step.get(StepKey.PRIORITY, None)
+            step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
 
             steps_sort_keys.append({"step": step, "index": step_index, "priority": step_priority})
 
@@ -119,14 +131,18 @@ class CardFace(Extendable):
             self.logger.debug(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
-        ordered_steps = tuple(step_keys["step"] for step_keys in steps_sort_keys)
+        ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
         for step in ordered_steps:
             # Required params
-            step_type: str = step[StepKey.TYPE]
+            step_type: str = self.resolve_deferred_value(step[StepKey.TYPE])
 
             # Optional params
-            do_log: bool = step.get("do_log", False)
+            do_step: bool = self.resolve_deferred_value(step.get(StepKey.DO_STEP, True))
+            do_log: bool = self.resolve_deferred_value(step.get(GenericKey.DO_LOG, False))
+
+            if not do_step:
+                continue
 
             if do_log:
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
@@ -156,42 +172,42 @@ class CardFace(Extendable):
 
         # To ensure the provided value is not edited in place within this method, a copy is made
         # Necessary to ensure due to the recursive nature of this method
-        working_value = Methods.try_copy(value)
+        value = Methods.try_copy(value)
 
         # Determining whether to log the resolved value
-        deferred_value_type = self.deferred_value_type(working_value)
+        deferred_value_type = self.deferred_value_type(value)
         if deferred_value_type:
             # Optional params
-            do_log: bool = self.resolve_deferred_value(value.get("do_log", False))
+            do_log: bool = self.resolve_deferred_value(value.get(GenericKey.DO_LOG, False))
 
             log_deferred_value_type = deferred_value_type
         else:
             do_log = False
 
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
-        while deferred_value_type := self.deferred_value_type(working_value):
+        while deferred_value_type := self.deferred_value_type(value):
             if deferred_value_type in self.deferred_value_resolvers:
-                working_value = self.deferred_value_resolvers[deferred_value_type](working_value, self)
+                value = self.deferred_value_resolvers[deferred_value_type](value, self)
             else:
                 raise NotImplementedError(f"no resolver found to handle deferred value type: {deferred_value_type}")
 
         # Recursive conversion
-        if type(working_value) in (tuple, list):
-            old_working_value = working_value
-            working_value = []
-            for item in old_working_value:
-                working_value.append(self.resolve_deferred_value(item))
-            if type(old_working_value) is tuple:
-                working_value = tuple(working_value)
-        elif type(working_value) is dict:
-            for key, item in working_value.items():
-                working_value[key] = self.resolve_deferred_value(item)
+        if type(value) in (tuple, list):
+            old_value = value
+            value = []
+            for item in old_value:
+                value.append(self.resolve_deferred_value(item))
+            if type(old_value) is tuple:
+                value = tuple(value)
+        elif type(value) is dict:
+            for key, item in value.items():
+                value[key] = self.resolve_deferred_value(item)
 
         # Logging
         if do_log:
-            self.logger.info(f"Resolved deferred value (type='{log_deferred_value_type}'): {working_value}")
+            self.logger.info(f"Resolved deferred value (type='{log_deferred_value_type}'): {value}")
 
-        return working_value
+        return value
 
     @staticmethod
     def deferred_value_type(value) -> Optional[str]:
@@ -203,6 +219,6 @@ class CardFace(Extendable):
 
         if type(value) is not dict:
             return
-        if Constants.DEFERRED_TYPE_KEY not in value:
+        if DeferredKey.DEFERRED not in value:
             return
-        return value[Constants.DEFERRED_TYPE_KEY]
+        return value[DeferredKey.DEFERRED]

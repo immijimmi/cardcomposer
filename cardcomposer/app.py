@@ -1,5 +1,5 @@
 from json import loads
-from typing import Optional
+from typing import Optional, Union
 from sys import stderr, getsizeof
 import os
 import logging
@@ -8,6 +8,7 @@ from .cardface import CardFace
 from .extensions import PresetSteps, PresetValues
 from .methods import Methods
 from .constants import Constants
+from .types import Deferred, Step, CardFaceLabel
 
 
 class App:
@@ -51,11 +52,11 @@ class App:
 
         cardfaces = []
         for cardface_data in cards_data:
-            label: Optional[str] = cardface_data.get("label")
-            size: Optional[tuple[int, int]] = cardface_data.get("size")
-            templates_labels: Optional[tuple[str]] = cardface_data.get("templates", ())
-            steps: tuple[dict[str], ...] = cardface_data.get("steps", ())
-            is_template: bool = cardface_data.get("is_template", False)
+            label: Union[Deferred, CardFaceLabel] = cardface_data.get("label")
+            size: Union[Deferred, Optional[tuple[int, int]]] = cardface_data.get("size")
+            templates_labels: Union[Deferred, tuple[CardFaceLabel, ...]] = cardface_data.get("templates", ())
+            steps: tuple[Step, ...] = cardface_data.get("steps", ())
+            is_template: Union[Deferred, bool] = cardface_data.get("is_template", False)
 
             cardface = CardFace.with_extensions(PresetSteps, PresetValues)(
                 label=label,
