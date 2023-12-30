@@ -29,7 +29,8 @@ class PresetSteps(Extension):
             "paste_image": PresetSteps.__step_paste_image,
             "write_to_cache": PresetSteps.__step_write_to_cache,
             "save": PresetSteps.__step_save,
-            "write_text": PresetSteps.__step_write_text
+            "write_text": PresetSteps.__step_write_text,
+            "stop": PresetSteps.__step_stop
         }
 
         for step_name, step_handler in step_handlers.items():
@@ -196,3 +197,7 @@ class PresetSteps(Extension):
 
         image = Image.alpha_composite(image, compatibility_layer)
         return image
+
+    @staticmethod
+    def __step_stop(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
+        raise StopIteration

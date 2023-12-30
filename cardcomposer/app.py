@@ -17,6 +17,7 @@ class App:
         self.logger.addHandler(logging.StreamHandler(stderr))
         self.logger.setLevel(logging.INFO)
 
+        # Load manifest of all files containing card data
         try:
             self.logger.debug(
                 f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}..."
@@ -29,6 +30,17 @@ class App:
                 f"Unable to locate cards data manifest, defaulting to {Constants.DEFAULT_CARDS_DATA_FILE_PATH}"
             )
             cards_data_paths = [Constants.DEFAULT_CARDS_DATA_FILE_PATH]
+
+        # Load config
+        config: Optional[dict[str]]
+        try:
+            self.logger.debug(f"Attempting to load config from {Constants.CONFIG_FILE_PATH}...")
+            with open(Constants.CONFIG_FILE_PATH, "r") as config_file:
+                config = loads(config_file.read())
+            self.logger.info(f"Config successfully loaded.")
+        except FileNotFoundError:
+            self.logger.warning(f"Unable to locate config file, defaulting to empty config.")
+            config = None
 
         cards_data_files_paths = []
         # Resolve any entries which reference a directory into a list of .json files it contains, recursively
@@ -64,11 +76,11 @@ class App:
                 steps=steps,
                 size=size,
                 is_template=is_template,
+                config=config,
                 logger=self.logger
             )
             cardfaces.append(cardface)
         self.logger.info(f"{CardFace.__name__} objects initialised.")
 
         for cardface in cardfaces:
-            if not cardface.is_template:
-                cardface.generate()
+            cardface.generate()

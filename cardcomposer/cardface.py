@@ -18,6 +18,7 @@ class CardFace(Extendable):
             size: Union[Deferred, Optional[tuple[int, int]]] = None,
             is_template: Union[Deferred, bool] = False,
             templates_pool: Union[Deferred, dict[CardFaceLabel, "CardFace"]] = {},
+            config: Optional[dict[str]] = None,
             logger=None
     ):
         super().__init__()
@@ -38,6 +39,7 @@ class CardFace(Extendable):
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
         self.steps: tuple[Step, ...] = tuple(steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
+        self.config: dict[str] = config or {}
         self.logger = logger or logging.root
 
         self.templates_pool: dict[CardFaceLabel, "CardFace"]
@@ -100,7 +102,7 @@ class CardFace(Extendable):
                     return template.size
         return self._size
 
-    def generate(self) -> Image.Image:
+    def generate(self) -> Optional[Image.Image]:
         if not self.size:
             raise ValueError(f"unable to generate image from {type(self).__name__} (no size set)")
 
@@ -133,6 +135,7 @@ class CardFace(Extendable):
 
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
+        steps_completed = 0
         for step in ordered_steps:
             # Required params
             step_type: str = self.resolve_deferred_value(step[StepKey.TYPE])
@@ -148,13 +151,20 @@ class CardFace(Extendable):
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
 
             step_handler = self.step_handlers[step_type]
-            self.working_image = step_handler(self.working_image, step, self)
+            try:
+                self.working_image = step_handler(self.working_image, step, self)
+                steps_completed += 1
+            except StopIteration:  # This indicates that any further processing should cease
+                break
 
         result = self.working_image
         self.working_image = None
 
         self.cache.clear()
         self.logger.debug(f"{type(self).__name__} cache cleared.")
+
+        if steps_completed == 0:
+            return None  # No image is returned if no processing was completed
 
         self.logger.info(f"{type(self).__name__} image (label='{self.label}') successfully generated.")
         return result
