@@ -146,11 +146,10 @@ class CardFace(Extendable):
             self.logger.debug(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
-        log_all: bool = self.config.get(ConfigKey.LOG_ALL, False)
-
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
         steps_completed = 0
+        log_all: bool = self.config.get(ConfigKey.LOG_ALL, False)
         for step in ordered_steps:
             # Required params
             step_type: str = self.resolve_deferred_value(step[StepKey.TYPE])
