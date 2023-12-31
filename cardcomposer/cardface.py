@@ -35,6 +35,7 @@ class CardFace(Extendable):
         self.cache = {}
         # Stores a reference to the image being generated during `.generate()`
         self.working_image: Optional[Image.Image] = None
+        self.generated_image: Optional[Image.Image] = None
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
@@ -99,6 +100,9 @@ class CardFace(Extendable):
         return self._size
 
     def generate(self) -> Optional[Image.Image]:
+        if self.generated_image is not None:
+            return self.generated_image
+
         if self.do_skip_generation:
             self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) skipped.")
             return None
@@ -162,7 +166,7 @@ class CardFace(Extendable):
                 steps_completed = 0
                 break
 
-        result = self.working_image
+        self.generated_image = self.working_image
         self.working_image = None
 
         self.cache.clear()
@@ -173,7 +177,7 @@ class CardFace(Extendable):
             return None  # No image is returned if no processing was completed
 
         self.logger.info(f"{type(self).__name__} image (label='{self.label}') successfully generated.")
-        return result
+        return self.generated_image
 
     def resolve_deferred_value(self, value):
         """
