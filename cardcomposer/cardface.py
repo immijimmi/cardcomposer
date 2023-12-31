@@ -113,11 +113,11 @@ class CardFace(Extendable):
             return self.generated_image
 
         if self.do_skip_generation:
-            self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) skipped.")
+            self.logger.debug(f"Generation for {type(self).__name__} (label='{self.label}') skipped.")
             return None
 
         if not self.size:
-            self.logger.warning(f"Unable to generate image from {type(self).__name__} (label={self.label}); No size set.")
+            self.logger.warning(f"Unable to generate image from {type(self).__name__} (label='{self.label}'); No size set.")
             return None
 
         self.cache.clear()
@@ -188,7 +188,7 @@ class CardFace(Extendable):
         self.logger.debug(f"{type(self).__name__} cache cleared (post-generation).")
 
         if steps_completed == 0:
-            self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) cancelled.")
+            self.logger.debug(f"Generation for {type(self).__name__} (label='{self.label}') cancelled.")
             return None  # No image is returned if no processing was completed
 
         self.logger.info(
