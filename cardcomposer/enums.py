@@ -1,6 +1,10 @@
 from enum import Enum
 
 
+class ConfigKey(str, Enum):
+    LOG_ALL = "log_all"
+
+
 class GenericKey(str, Enum):
     """
     Keys that have a common usage in all step data and deferred values

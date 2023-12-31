@@ -5,7 +5,7 @@ from typing import Optional, Callable, Any, Union, Iterable
 import logging
 
 from .methods import Methods
-from .enums import GenericKey, DeferredKey, StepKey
+from .enums import ConfigKey, GenericKey, DeferredKey, StepKey
 from .types import Deferred, Step, CardFaceLabel
 
 
@@ -42,7 +42,6 @@ class CardFace(Extendable):
         self.steps: tuple[Step, ...] = tuple(steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
         self.do_skip_generation: bool = self.resolve_deferred_value(do_skip_generation)
-        self.config: dict[str] = config or {}
         self.logger = logger or logging.root
 
         self.templates_pool: dict[CardFaceLabel, "CardFace"]
@@ -51,6 +50,15 @@ class CardFace(Extendable):
         else:
             # Done this way to prevent the object identity of the templates pool from changing if it isn't deferred
             self.templates_pool = templates_pool
+
+        self.config: dict[str]
+        if config is not None:
+            self.config = {
+                config_key: self.resolve_deferred_value(config_value)
+                for (config_key, config_value) in config.items()
+            }
+        else:
+            self.config = {}
 
         self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
 
@@ -138,6 +146,8 @@ class CardFace(Extendable):
             self.logger.debug(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
+        log_all: bool = self.config.get(ConfigKey.LOG_ALL, False)
+
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
         steps_completed = 0
@@ -151,7 +161,7 @@ class CardFace(Extendable):
 
             if not do_step:
                 continue
-            if do_log:
+            if do_log or log_all:
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
 
             step_handler = self.STEP_HANDLERS[step_type]
