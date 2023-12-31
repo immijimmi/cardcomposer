@@ -116,7 +116,7 @@ class CardFace(Extendable):
             return None
 
         if not self.size:
-            self.logger.debug(f"Unable to generate image from {type(self).__name__} (label={self.label}); No size set.")
+            self.logger.warning(f"Unable to generate image from {type(self).__name__} (label={self.label}); No size set.")
             return None
 
         self.cache.clear()
@@ -143,7 +143,7 @@ class CardFace(Extendable):
             steps_sort_keys.sort(key=lambda step_keys: (step_keys["priority"], step_keys["index"]))
             self.logger.debug(f"Sorted {type(self).__name__} steps.")
         except TypeError:  # Unable to sort by priority
-            self.logger.debug(f"Unable to sort {type(self).__name__} steps by priority.")
+            self.logger.warning(f"Unable to sort {type(self).__name__} steps by priority.")
             steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
