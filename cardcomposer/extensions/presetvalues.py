@@ -37,6 +37,9 @@ class PresetValues(Extension):
             DeferredValue.TEXT_BBOX: PresetValues.__resolve_text_bbox
         }
 
+        # To prevent mutating the dict on the base class
+        target_cls.DEFERRED_VALUE_RESOLVERS = {**target_cls.DEFERRED_VALUE_RESOLVERS}
+
         for resolver_key, resolver in deferred_value_resolvers.items():
             if resolver_key in target_cls.DEFERRED_VALUE_RESOLVERS:
                 raise ValueError(f"a deferred value resolver already exists under the provided key: {resolver_key}")

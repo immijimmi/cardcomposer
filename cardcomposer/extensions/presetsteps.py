@@ -28,6 +28,9 @@ class PresetSteps(Extension):
             "cancel": PresetSteps.__step_cancel
         }
 
+        # To prevent mutating the dict on the base class
+        target_cls.STEP_HANDLERS = {**target_cls.STEP_HANDLERS}
+
         for handler_key, handler in step_handlers.items():
             if handler_key in target_cls.STEP_HANDLERS:
                 raise ValueError(f"a step handler already exists under the provided key: {handler_key}")
