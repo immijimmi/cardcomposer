@@ -2,6 +2,7 @@ from objectextensions import Extendable
 from PIL import Image
 
 from typing import Optional, Callable, Any, Union, Iterable
+from datetime import datetime
 import logging
 
 from .methods import Methods
@@ -122,6 +123,8 @@ class CardFace(Extendable):
         self.cache.clear()
         self.logger.debug(f"{type(self).__name__} cache cleared (pre-generation).")
 
+        gen_start = datetime.now()
+
         self.logger.debug(f"Generating new {type(self).__name__} image (label='{self.label}')...")
         self.working_image = Image.new("RGBA", self.size)
 
@@ -179,6 +182,8 @@ class CardFace(Extendable):
         self.generated_image = self.working_image
         self.working_image = None
 
+        gen_end = datetime.now()
+
         self.cache.clear()
         self.logger.debug(f"{type(self).__name__} cache cleared (post-generation).")
 
@@ -186,7 +191,10 @@ class CardFace(Extendable):
             self.logger.debug(f"Generation for {type(self).__name__} (label={self.label}) cancelled.")
             return None  # No image is returned if no processing was completed
 
-        self.logger.info(f"{type(self).__name__} image (label='{self.label}') successfully generated.")
+        self.logger.info(
+            f"{type(self).__name__} image (label='{self.label}') successfully generated"
+            f" in {(gen_end - gen_start).total_seconds}s."
+        )
         return self.generated_image
 
     def resolve_deferred_value(self, value):
