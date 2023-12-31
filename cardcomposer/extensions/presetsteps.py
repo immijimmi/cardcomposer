@@ -19,12 +19,6 @@ class PresetSteps(Extension):
 
     @staticmethod
     def extend(target_cls):
-        Extension._wrap(target_cls, "__init__", PresetSteps.__wrap_init)
-
-    @staticmethod
-    def __wrap_init(self, *args, **kwargs):
-        yield
-
         step_handlers = {
             "paste_image": PresetSteps.__step_paste_image,
             "write_to_cache": PresetSteps.__step_write_to_cache,
@@ -34,11 +28,10 @@ class PresetSteps(Extension):
             "cancel": PresetSteps.__step_cancel
         }
 
-        for step_name, step_handler in step_handlers.items():
-            if step_name in self.step_handlers:
-                raise ValueError(f"multiple step handlers provided under the same key: {step_name}")
-
-            self.step_handlers[step_name] = step_handler
+        for handler_key, handler in step_handlers.items():
+            if handler_key in target_cls.STEP_HANDLERS:
+                raise ValueError(f"a step handler already exists under the provided key: {handler_key}")
+            target_cls.STEP_HANDLERS[handler_key] = handler
 
     @staticmethod
     def __step_write_to_cache(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:

@@ -10,6 +10,9 @@ from .types import Deferred, Step, CardFaceLabel
 
 
 class CardFace(Extendable):
+    STEP_HANDLERS: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {}
+    DEFERRED_VALUE_RESOLVERS: dict[str, Callable[[Deferred, "CardFace"], Any]] = {}
+
     def __init__(
             self,
             label: Union[Deferred, CardFaceLabel] = None,
@@ -23,9 +26,6 @@ class CardFace(Extendable):
             logger=None
     ):
         super().__init__()
-
-        self.step_handlers: dict[str, Callable[[Image.Image, dict[str], "CardFace"], Image.Image]] = {}
-        self.deferred_value_resolvers: dict[str, Callable[[Deferred, "CardFace"], Any]] = {}
 
         """
         The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
@@ -150,7 +150,7 @@ class CardFace(Extendable):
             if do_log:
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
 
-            step_handler = self.step_handlers[step_type]
+            step_handler = self.STEP_HANDLERS[step_type]
             try:
                 self.working_image = step_handler(self.working_image, step, self)
                 steps_completed += 1
@@ -202,10 +202,8 @@ class CardFace(Extendable):
 
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
         while deferred_value_type := self.deferred_value_type(value):
-            if deferred_value_type in self.deferred_value_resolvers:
-                value = self.deferred_value_resolvers[deferred_value_type](value, self)
-            else:
-                raise NotImplementedError(f"no resolver found to handle deferred value type: {deferred_value_type}")
+            deferred_value_resolver = self.DEFERRED_VALUE_RESOLVERS[deferred_value_type]
+            value = deferred_value_resolver(value, self)
 
         # Recursive conversion
         if type(value) in (tuple, list):

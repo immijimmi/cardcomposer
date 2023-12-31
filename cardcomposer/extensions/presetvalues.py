@@ -20,12 +20,6 @@ class PresetValues(Extension):
 
     @staticmethod
     def extend(target_cls):
-        Extension._wrap(target_cls, "__init__", PresetValues.__wrap_init)
-
-    @staticmethod
-    def __wrap_init(self, *args, **kwargs):
-        yield
-
         deferred_value_resolvers = {
             DeferredValue.SELF: PresetValues.__resolve_self,
             DeferredValue.CONFIG: PresetValues.__resolve_config,
@@ -43,11 +37,10 @@ class PresetValues(Extension):
             DeferredValue.TEXT_BBOX: PresetValues.__resolve_text_bbox
         }
 
-        for value_type, value_resolver in deferred_value_resolvers.items():
-            if value_type in self.deferred_value_resolvers:
-                raise ValueError(f"multiple resolvers provided for deferred value type: {value_type}")
-
-            self.deferred_value_resolvers[value_type] = value_resolver
+        for resolver_key, resolver in deferred_value_resolvers.items():
+            if resolver_key in target_cls.DEFERRED_VALUE_RESOLVERS:
+                raise ValueError(f"a deferred value resolver already exists under the provided key: {resolver_key}")
+            target_cls.DEFERRED_VALUE_RESOLVERS[resolver_key] = resolver
 
     @staticmethod
     def __resolve_self(value: Deferred, card_face: "CardFace") -> "CardFace":
