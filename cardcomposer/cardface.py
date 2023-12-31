@@ -161,7 +161,8 @@ class CardFace(Extendable):
             if not do_step:
                 continue
             if do_log or log_all:
-                self.logger.info(f"Processing {type(self).__name__} step: {step_type}")
+                step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
+                self.logger.info(f"Processing {type(self).__name__} step: {step_type} (priority={step_priority})")
 
             step_handler = self.STEP_HANDLERS[step_type]
             try:
