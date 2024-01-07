@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, getitem, eq
+from operator import add, mul, sub, truediv, getitem, eq, gt
 from os import path
 
 from .methods import Methods
@@ -21,5 +21,6 @@ class Constants:
         "if": Methods.calc_if,
         "contains": (lambda container, val: val in container),
         "not": (lambda val: not val),
-        "eq": eq
+        "eq": eq,
+        "gt": gt
     }
