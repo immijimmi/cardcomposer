@@ -15,6 +15,7 @@ class Constants:
         "min": min,
         "max": max,
         "getitem": getitem,
+        "dict_get": (lambda target_dict, key, default=None: target_dict.get(key, default)),
         "getattr": getattr,
         "str.format": str.format,
         "path.join": path.join,
