@@ -44,7 +44,7 @@ class PresetSteps(Extension):
         )  # Values to be stored should remain deferred until needed
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
         is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
-        is_global: bool = card_face.resolve_deferred_value(step.get("is_global", True))
+        is_global: bool = card_face.resolve_deferred_value(step.get("is_global", False))
         do_log: bool = card_face.resolve_deferred_value(step.get(GenericKey.DO_LOG, False))
 
         if entries is not None:
