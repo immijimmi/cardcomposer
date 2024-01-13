@@ -44,6 +44,7 @@ class PresetSteps(Extension):
         )  # Values to be stored should remain deferred until needed
         mode: str = card_face.resolve_deferred_value(step.get("mode", "add"))
         is_lazy: bool = card_face.resolve_deferred_value(step.get("is_lazy", True))
+        is_global: bool = card_face.resolve_deferred_value(step.get("is_global", True))
         do_log: bool = card_face.resolve_deferred_value(step.get(GenericKey.DO_LOG, False))
 
         if entries is not None:
@@ -65,18 +66,26 @@ class PresetSteps(Extension):
             if mode == "add":
                 if key in card_face.cache:
                     raise ValueError(f"key already exists in {type(card_face).__name__} cache: {key}")
+                if is_global and (key in card_face.global_cache):
+                    raise ValueError(f"key already exists in {type(card_face).__name__} global cache: {key}")
             elif mode == "update":
                 if key not in card_face.cache:
                     raise KeyError(f"key not found in {type(card_face).__name__} cache: {key}")
+                if is_global and (key not in card_face.cache):
+                    raise KeyError(f"key not found in {type(card_face).__name__} global cache: {key}")
             elif mode == "add_or_update":
                 pass
             else:
                 raise ValueError(f"unrecognised write mode: {mode}")
 
             if do_log:
-                card_face.logger.info(f"Writing to cache (mode='{mode}', is_lazy={is_lazy}): {{{key}: {value}}}")
+                card_face.logger.info(
+                    f"Writing to cache (mode='{mode}', is_lazy={is_lazy}, is_global={is_global}): {{{key}: {value}}}"
+                )
 
             card_face.cache[key] = value
+            if is_global:
+                card_face.global_cache[key] = value
 
         return image
 

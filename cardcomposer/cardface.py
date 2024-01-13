@@ -22,6 +22,7 @@ class CardFace(Extendable):
             size: Union[Deferred, Optional[tuple[int, int]]] = None,
             is_template: Union[Deferred, bool] = True,
             templates_pool: Union[Deferred, dict[CardFaceLabel, "CardFace"]] = {},
+            global_cache: dict = {},
             do_skip_generation: Union[Deferred, bool] = False,
             config: Optional[dict[str]] = None,
             logger=None
@@ -33,15 +34,18 @@ class CardFace(Extendable):
         (e.g. the coords of a specific point location on the card). They can be added by specific steps, and read during
         any subsequent steps once added
         """
-        self.cache = {}
+        self.cache: dict = {}
         # Stores a reference to the image being generated during `.generate()`
         self.working_image: Optional[Image.Image] = None
         self.generated_image: Optional[Image.Image] = None
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
+        # Deferred values in steps should not be resolved until generation
         self.steps: tuple[Step, ...] = tuple(steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
+        # Deferred values in the global cache should not be resolved until generation
+        self.global_cache: dict = global_cache if global_cache is not None else {}
         self.do_skip_generation: bool = self.resolve_deferred_value(do_skip_generation)
         self.logger = logger or logging.root
 
@@ -121,7 +125,8 @@ class CardFace(Extendable):
             return None
 
         self.cache.clear()
-        self.logger.debug(f"{type(self).__name__} cache cleared (pre-generation).")
+        self.cache.update(self.global_cache)
+        self.logger.debug(f"{type(self).__name__} cache reset (pre-generation).")
 
         gen_start = datetime.now()
 
