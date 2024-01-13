@@ -62,7 +62,7 @@ class PresetValues(Extension):
             return card_face.cache[cache_key]
         except KeyError:
             if "default" not in value:
-                raise KeyError(f"no value found in cache and no default provided for key: {cache_key}")
+                raise KeyError(f"no value found in {type(card_face).__name__} cache (label={card_face.label}) and no default provided for key: {cache_key}")
 
             return value["default"]
 
