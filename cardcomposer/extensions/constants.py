@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, getitem, eq, gt
+from operator import add, mul, sub, truediv, getitem, eq, gt, ge, lt, le, ne
 from os import path
 
 from .methods import Methods
@@ -23,5 +23,12 @@ class Constants:
         "contains": (lambda container, val: val in container),
         "not": (lambda val: not val),
         "eq": eq,
-        "gt": gt
+        "ne": ne,
+        "gt": gt,
+        "ge": ge,
+        "lt": lt,
+        "le": le,
+        "int": int,
+        "float": float,
+        "str": str
     }
