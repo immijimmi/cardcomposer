@@ -210,7 +210,15 @@ class Methods:
                 image = image.resize(Methods.ensure_ints(tuple(new_image_size)), resample=Image.Resampling.LANCZOS)
 
         if opacity is not None:
-            opacity_layer = Image.new("RGBA", image.size)
-            image = Image.blend(opacity_layer, image, alpha=opacity)
+            """
+            `Image.blend()` interpolates both RGB and A values for each pixel, so in order to blend transparency into
+            a picture using a transparent layer, the transparent layer needs to have matching RGB values per pixel to
+            the picture in question. Thus, when applying this process below, the image is copied and then the copy set
+            to 0 alpha to serve as the transparent layer
+            """
+            blend_layer = image.copy()
+            blend_layer.putalpha(0)
+
+            image = Image.blend(blend_layer, image, alpha=opacity)
 
         return image
