@@ -30,5 +30,9 @@ class Constants:
         "le": le,
         "int": int,
         "float": float,
-        "str": str
+        "str": str,
+        "and": (lambda a, b: a and b),
+        "or": (lambda a, b: a or b),
+        "all": all,
+        "any": any
     }
