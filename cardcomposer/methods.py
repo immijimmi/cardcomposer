@@ -108,6 +108,7 @@ class Methods:
             limits: Optional[Iterable[dict[str]]] = None,
             opacity: Optional[float] = None
     ) -> Image.Image:
+        # Cropping can increase the size as well as decreasing it, if the box provided is larger - adding empty space
         if crop:
             crop_working = [*crop]
 
