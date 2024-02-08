@@ -34,5 +34,6 @@ class Constants:
         "and": (lambda a, b: a and b),
         "or": (lambda a, b: a or b),
         "all": all,
-        "any": any
+        "any": any,
+        "is": (lambda a, b: a is b)
     }

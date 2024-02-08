@@ -62,7 +62,9 @@ class PresetValues(Extension):
             return card_face.cache[cache_key]
         except KeyError:
             if "default" not in value:
-                raise KeyError(f"no value found in {type(card_face).__name__} cache (label={card_face.label}) and no default provided for key: {cache_key}")
+                raise KeyError(
+                    f"no value found in {type(card_face).__name__} cache (label={card_face.label}) and no default provided for key: {cache_key}"
+                )
 
             return value["default"]
 
@@ -84,10 +86,22 @@ class PresetValues(Extension):
 
         operation = Constants.CALCULATIONS_LOOKUP[operation_key]
         operands = tuple(operands)
-        result = operation(*operands)
 
-        if do_log:
-            card_face.logger.info(f"Performing calculation step: {operation.__name__}{operands} -> {result}")
+        try:
+            result = operation(*operands)
+            if do_log:
+                card_face.logger.info(f"Calculated value: {operation.__name__}{operands} -> {result}")
+        except:
+            if "default" not in value:
+                raise KeyError(
+                    f"unable to perform calculation, and no default value provided: {operation.__name__}{operands}"
+                )
+
+            result = value["default"]
+            if do_log:
+                card_face.logger.info(
+                    f"Calculation failed, using default value ({value["default"]}): {operation.__name__}{operands}"
+                )
 
         return result
 
