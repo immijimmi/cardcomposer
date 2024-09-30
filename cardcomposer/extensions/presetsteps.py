@@ -96,7 +96,7 @@ class PresetSteps(Extension):
         position: tuple[float, float] = card_face.resolve_deferred_value(step["position"])
 
         # Optional params
-        is_position_centre: Optional[bool] = card_face.resolve_deferred_value(step.get("is_position_centre", None))
+        is_position_centre: Optional[bool] = card_face.resolve_deferred_value(step.get("is_position_centre", False))
 
         embed_image = CardFaceMethods.manipulate_image(
             embed_image,
@@ -120,16 +120,28 @@ class PresetSteps(Extension):
 
     @staticmethod
     def __step_save(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
+        """
+        Replaces/overwrites an existing file at the save location if there is one
+        """
+
         # Optional params
         file_path: str = card_face.resolve_deferred_value(step.get("path", "Cards"))
         filename: str = card_face.resolve_deferred_value(step.get("filename", card_face.label or "card"))
         extension: str = card_face.resolve_deferred_value(step.get("extension", ".tif"))
+        data: Optional[Union[Image.Image, str]] = card_face.resolve_deferred_value(step.get("data", None))
 
         filename = Methods.sanitise_filename(filename)
         full_path = path.join(file_path, filename + extension)
 
         Path(file_path).mkdir(parents=True, exist_ok=True)
-        image.save(full_path)
+
+        if data is None:
+            image.save(full_path)
+        elif issubclass(type(data), Image.Image):
+            data.save(full_path)
+        else:
+            with open(full_path, "w") as file:
+                file.write(data)
 
         return image
 
