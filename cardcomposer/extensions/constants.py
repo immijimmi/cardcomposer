@@ -1,5 +1,6 @@
 from operator import add, mul, sub, truediv, getitem, eq, gt, ge, lt, le, ne
 from os import path
+from json import dumps, loads
 
 from .methods import Methods
 
@@ -35,5 +36,7 @@ class Constants:
         "or": (lambda a, b: a or b),
         "all": all,
         "any": any,
-        "is": (lambda a, b: a is b)
+        "is": (lambda a, b: a is b),
+        "json.dumps": dumps,
+        "json.loads": loads
     }
