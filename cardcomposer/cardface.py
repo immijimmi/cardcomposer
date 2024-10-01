@@ -158,7 +158,7 @@ class CardFace(Extendable):
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
         steps_completed = 0
-        log_all: bool = self.config.get(ConfigKey.LOG_ALL, False)
+        do_log_all: bool = self.config.get(ConfigKey.DO_LOG_ALL, False)
         for step in ordered_steps:
             # Required params
             step_type: str = self.resolve_deferred_value(step[StepKey.TYPE])
@@ -169,7 +169,7 @@ class CardFace(Extendable):
 
             if not do_step:
                 continue
-            if do_log_step or log_all:
+            if do_log_step or do_log_all:
                 step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type} (priority={step_priority})")
 

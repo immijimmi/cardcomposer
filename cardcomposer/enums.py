@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class ConfigKey(str, Enum):
-    LOG_ALL = "log_all"
+    DO_LOG_ALL = "do_log_all"
 
 
 class GenericKey(str, Enum):
