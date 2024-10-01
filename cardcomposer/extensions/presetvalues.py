@@ -22,6 +22,7 @@ class PresetValues(Extension):
     def extend(target_cls):
         deferred_value_resolvers = {
             DeferredValue.SELF: PresetValues.__resolve_self,
+            DeferredValue.LABEL: PresetValues.__resolve_label,
             DeferredValue.CONFIG: PresetValues.__resolve_config,
             DeferredValue.CACHED: PresetValues.__resolve_cached,
             DeferredValue.CALCULATION: PresetValues.__resolve_calculation,
@@ -49,6 +50,10 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_self(value: Deferred, card_face: CardFace) -> CardFace:
         return card_face
+
+    @staticmethod
+    def __resolve_label(value: Deferred, card_face: CardFace) -> CardFaceLabel:
+        return card_face.label
 
     @staticmethod
     def __resolve_config(value: Deferred, card_face: CardFace) -> dict[str]:

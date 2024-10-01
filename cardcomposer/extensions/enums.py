@@ -10,6 +10,7 @@ class DeferredValue(str, Enum):
     MAPPED = "mapped"
 
     # Shortcut values
+    LABEL = "label"
     CONFIG = "config",
     CACHED = "cached",
     CARD_DIMENSION = "card_dim"
