@@ -14,6 +14,7 @@ class DeferredValue(str, Enum):
     CACHED = "cached",
     CARD_DIMENSION = "card_dim"
     WORKING_IMAGE = "working_image"
+    PARENT = "parent"
 
     # PIL-specific values
     IMAGE_FROM_FILE = "image_from_file"

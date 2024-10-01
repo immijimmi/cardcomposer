@@ -29,6 +29,7 @@ class PresetValues(Extension):
             DeferredValue.MAPPED: PresetValues.__resolve_mapped,
             DeferredValue.CARD_DIMENSION: PresetValues.__resolve_card_dimension,
             DeferredValue.WORKING_IMAGE: PresetValues.__resolve_working_image,
+            DeferredValue.PARENT: PresetValues.__resolve_parent,
             DeferredValue.IMAGE_FROM_FILE: PresetValues.__resolve_image_from_file,
             DeferredValue.BLANK_IMAGE: PresetValues.__resolve_blank_image,
             DeferredValue.IMAGE_FROM_TEMPLATE: PresetValues.__resolve_image_from_template,
@@ -46,15 +47,15 @@ class PresetValues(Extension):
             target_cls.DEFERRED_VALUE_RESOLVERS[resolver_key] = resolver
 
     @staticmethod
-    def __resolve_self(value: Deferred, card_face: "CardFace") -> "CardFace":
+    def __resolve_self(value: Deferred, card_face: CardFace) -> CardFace:
         return card_face
 
     @staticmethod
-    def __resolve_config(value: Deferred, card_face: "CardFace") -> dict[str]:
+    def __resolve_config(value: Deferred, card_face: CardFace) -> dict[str]:
         return card_face.config
 
     @staticmethod
-    def __resolve_cached(value: Deferred, card_face: "CardFace"):
+    def __resolve_cached(value: Deferred, card_face: CardFace):
         # Required params
         cache_key = card_face.resolve_deferred_value(value["key"])
 
@@ -69,7 +70,7 @@ class PresetValues(Extension):
             return value["default"]
 
     @staticmethod
-    def __resolve_calculation(value: Deferred, card_face: "CardFace"):
+    def __resolve_calculation(value: Deferred, card_face: CardFace):
         """
         Invokes a single calculation from a limited list of options, passing in the provided arguments.
         The provided arguments may themselves be any valid deferred value
@@ -106,7 +107,7 @@ class PresetValues(Extension):
         return result
 
     @staticmethod
-    def __resolve_seeded_random(value: Deferred, card_face: "CardFace") -> float:
+    def __resolve_seeded_random(value: Deferred, card_face: CardFace) -> float:
         # Required params
         seed = card_face.resolve_deferred_value(value["seed"])
 
@@ -120,7 +121,7 @@ class PresetValues(Extension):
         return random.random()
 
     @staticmethod
-    def __resolve_mapped(value: Deferred, card_face: "CardFace") -> list[Collection]:
+    def __resolve_mapped(value: Deferred, card_face: CardFace) -> list[Collection]:
         # Required params
         map_to: Collection = card_face.resolve_deferred_value(value["map_to"])
         key = card_face.resolve_deferred_value(value["key"])
@@ -142,7 +143,7 @@ class PresetValues(Extension):
         return result
 
     @staticmethod
-    def __resolve_card_dimension(value: Deferred, card_face: "CardFace") -> int:
+    def __resolve_card_dimension(value: Deferred, card_face: CardFace) -> int:
         # Required params
         dimension: str = card_face.resolve_deferred_value(value["dimension"])
 
@@ -154,32 +155,36 @@ class PresetValues(Extension):
             raise ValueError(f"invalid dimension name received: {dimension}")
 
     @staticmethod
-    def __resolve_working_image(value: Deferred, card_face: "CardFace") -> Image.Image:
+    def __resolve_working_image(value: Deferred, card_face: CardFace) -> Image.Image:
         return card_face.working_image
 
     @staticmethod
-    def __resolve_image_from_file(value: Deferred, card_face: "CardFace") -> Image.Image:
+    def __resolve_parent(value: Deferred, card_face: CardFace) -> Optional[CardFace]:
+        return card_face.parent
+
+    @staticmethod
+    def __resolve_image_from_file(value: Deferred, card_face: CardFace) -> Image.Image:
         # Required params
         src: str = card_face.resolve_deferred_value(value["src"])
 
         return Image.open(src)
 
     @staticmethod
-    def __resolve_blank_image(value: Deferred, card_face: "CardFace") -> Image.Image:
+    def __resolve_blank_image(value: Deferred, card_face: CardFace) -> Image.Image:
         # Required params
         size: tuple[float, float] = card_face.resolve_deferred_value(value["size"])
 
         return Image.new("RGBA", CardFaceMethods.ensure_ints(size))
 
     @staticmethod
-    def __resolve_image_from_template(value: Deferred, card_face: "CardFace") -> Optional[Image.Image]:
+    def __resolve_image_from_template(value: Deferred, card_face: CardFace) -> Optional[Image.Image]:
         # Required params
         label: CardFaceLabel = card_face.resolve_deferred_value(value["label"])
 
-        return card_face.templates_pool[label].generate()
+        return card_face.templates_pool[label].generate(parent=card_face)
 
     @staticmethod
-    def __resolve_font(value: Deferred, card_face: "CardFace") -> ImageFont:
+    def __resolve_font(value: Deferred, card_face: CardFace) -> ImageFont:
         # Required params
         src: str = card_face.resolve_deferred_value(value["src"])
 
@@ -209,7 +214,7 @@ class PresetValues(Extension):
             raise ValueError(f"invalid font type: {font_type}")
 
     @staticmethod
-    def __resolve_text_length(value: Deferred, card_face: "CardFace") -> float:
+    def __resolve_text_length(value: Deferred, card_face: CardFace) -> float:
         # Required params
         text: str = card_face.resolve_deferred_value(value["text"])
         font: ImageFont = card_face.resolve_deferred_value(value["font"])
@@ -234,7 +239,7 @@ class PresetValues(Extension):
         return draw.textlength(text=text, font=font, **textlength_optional_kwargs)
 
     @staticmethod
-    def __resolve_text_bbox(value: Deferred, card_face: "CardFace") -> tuple[int, int, int, int]:
+    def __resolve_text_bbox(value: Deferred, card_face: CardFace) -> tuple[int, int, int, int]:
         # Required params
         text: str = card_face.resolve_deferred_value(value["text"])
         font: ImageFont = card_face.resolve_deferred_value(value["font"])

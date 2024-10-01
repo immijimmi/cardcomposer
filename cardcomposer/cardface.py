@@ -35,9 +35,10 @@ class CardFace(Extendable):
         any subsequent steps once added
         """
         self.cache: dict = {}
-        # Stores a reference to the image being generated during `.generate()`
+        # Tracks the image being generated during `.generate()`
         self.working_image: Optional[Image.Image] = None
-        self.generated_image: Optional[Image.Image] = None
+        # Tracks the parent CardFace responsible for invoking `.generate()` on this object, if any
+        self.parent: Optional["CardFace"] = None
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
@@ -112,16 +113,15 @@ class CardFace(Extendable):
                     return template.size
         return self._size
 
-    def generate(self) -> Optional[Image.Image]:
-        if self.generated_image is not None:
-            return self.generated_image
-
+    def generate(self, parent: Optional["CardFace"] = None) -> Optional[Image.Image]:
         if self.do_skip_generation:
             self.logger.debug(f"Generation for {type(self).__name__} (label='{self.label}') skipped.")
             return None
 
         if not self.size:
-            self.logger.warning(f"Unable to generate image from {type(self).__name__} (label='{self.label}'); No size set.")
+            self.logger.warning(
+                f"Unable to generate image from {type(self).__name__} (label='{self.label}'); No size set."
+            )
             return None
 
         self.cache.clear()
@@ -131,6 +131,7 @@ class CardFace(Extendable):
         gen_start = datetime.now()
 
         self.logger.debug(f"Generating new {type(self).__name__} image (label='{self.label}')...")
+        self.parent = parent
         self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
@@ -164,11 +165,11 @@ class CardFace(Extendable):
 
             # Optional params
             do_step: bool = self.resolve_deferred_value(step.get(StepKey.DO_STEP, True))
-            do_log: bool = self.resolve_deferred_value(step.get(GenericKey.DO_LOG, False))
+            do_log_step: bool = self.resolve_deferred_value(step.get(GenericKey.DO_LOG, False))
 
             if not do_step:
                 continue
-            if do_log or log_all:
+            if do_log_step or log_all:
                 step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type} (priority={step_priority})")
 
@@ -181,18 +182,19 @@ class CardFace(Extendable):
                 break
             # This indicates that any further processing should cease, and nothing be returned
             except NotImplementedError:
-                steps_completed = 0
+                steps_completed = None
                 break
 
-        self.generated_image = self.working_image
+        generated_image = self.working_image
         self.working_image = None
+        self.parent = None
 
         gen_end = datetime.now()
 
         self.cache.clear()
         self.logger.debug(f"{type(self).__name__} cache cleared (post-generation).")
 
-        if steps_completed == 0:
+        if steps_completed is None:
             self.logger.debug(f"Generation for {type(self).__name__} (label='{self.label}') cancelled.")
             return None  # No image is returned if no processing was completed
 
@@ -200,7 +202,7 @@ class CardFace(Extendable):
             f"{type(self).__name__} image (label='{self.label}') successfully generated"
             f" in {round((gen_end - gen_start).total_seconds(), 2)}s."
         )
-        return self.generated_image
+        return generated_image
 
     def resolve_deferred_value(self, value):
         """
