@@ -37,6 +37,7 @@ class Constants:
         "all": all,
         "any": any,
         "is": (lambda a, b: a is b),
+        "is_not": (lambda a, b: a is not b),
         "json.dumps": dumps,
         "json.loads": loads
     }
