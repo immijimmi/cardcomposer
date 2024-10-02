@@ -117,13 +117,19 @@ class PresetValues(Extension):
         seed = card_face.resolve_deferred_value(value["seed"])
 
         # Optional params
-        n: int = card_face.resolve_deferred_value(value.get("n", 0))
+        n: int = card_face.resolve_deferred_value(value.get("n", 1))
+        is_int: bool = card_face.resolve_deferred_value(value.get("is_int", False))
+        mult: float = card_face.resolve_deferred_value(value.get("mult", 1))
 
         random.seed(seed)
-        for prior_roll in range(n):
+        for prior_roll in range(n-1):
             random.random()
 
-        return random.random()
+        result = mult * random.random()
+        if is_int:
+            result = round(result)
+
+        return result
 
     @staticmethod
     def __resolve_mapped(value: Deferred, card_face: CardFace) -> list[Collection]:
