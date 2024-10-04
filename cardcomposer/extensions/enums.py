@@ -4,7 +4,7 @@ from enum import Enum
 class DeferredValue(str, Enum):
     SELF = "self"
     STANDARD_CALCULATION = "calc"
-    ARITHMETIC_EQUATION = "arithmetic"
+    ARITHMETIC_EQUATION = "arith"
     SEEDED_RANDOM = "seeded"
 
     # Meta

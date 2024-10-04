@@ -233,7 +233,7 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_card_dimension(value: Deferred, card_face: CardFace) -> int:
         # Required params
-        dimension: str = card_face.resolve_deferred_value(value["dimension"])
+        dimension: str = card_face.resolve_deferred_value(value["dim"])
 
         if dimension == "width":
             return card_face.size[0]
