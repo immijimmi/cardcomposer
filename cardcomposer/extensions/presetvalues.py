@@ -1,7 +1,8 @@
 from objectextensions import Extension
 from PIL import Image, ImageFont, ImageDraw
 
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Optional, Sequence, Union, Literal
+from numbers import Number
 from collections.abc import Collection
 import random
 
@@ -25,7 +26,8 @@ class PresetValues(Extension):
             DeferredValue.LABEL: PresetValues.__resolve_label,
             DeferredValue.CONFIG: PresetValues.__resolve_config,
             DeferredValue.CACHED: PresetValues.__resolve_cached,
-            DeferredValue.CALCULATION: PresetValues.__resolve_calculation,
+            DeferredValue.STANDARD_CALCULATION: PresetValues.__resolve_standard_calculation,
+            DeferredValue.ARITHMETIC_EQUATION: PresetValues.__resolve_arithmetic_equation,
             DeferredValue.SEEDED_RANDOM: PresetValues.__resolve_seeded_random,
             DeferredValue.MAPPED: PresetValues.__resolve_mapped,
             DeferredValue.CARD_DIMENSION: PresetValues.__resolve_card_dimension,
@@ -75,7 +77,7 @@ class PresetValues(Extension):
             return value["default"]
 
     @staticmethod
-    def __resolve_calculation(value: Deferred, card_face: CardFace):
+    def __resolve_standard_calculation(value: Deferred, card_face: CardFace):
         """
         Invokes a single calculation from a limited list of options, passing in the provided arguments.
         The provided arguments may themselves be any valid deferred value
@@ -110,6 +112,81 @@ class PresetValues(Extension):
                 )
 
         return result
+
+    @staticmethod
+    def __resolve_arithmetic_equation(value: Deferred, card_face: CardFace):
+        # Required params
+        args: Iterable[Union[Deferred, list, float, Literal["+", "-", "*", "/", "**"]]] = (
+            card_face.resolve_deferred_value(value["args"])
+        )
+
+        args = list(args)
+
+        depth_indexes = []
+        while True:
+            working_args = args
+            for depth_index in depth_indexes:
+                working_args = working_args[depth_index]
+
+            # Check for sub-lists to resolve
+            do_reset = False
+            for operand_index in range(len(working_args)):
+                operand = card_face.resolve_deferred_value(working_args[operand_index])
+                working_args[operand_index] = operand
+
+                if type(operand) is list:
+                    # This must be resolved before the current depth, so set new depth and go to next loop
+                    depth_indexes.append(operand_index)
+                    do_reset = True
+                    break
+            if do_reset:
+                continue
+
+            # Resolve all arithmetic calculations in current working args list
+            for arithmetic_op_group in (("**",), ("*", "/"), ("+", "-")):
+                while True:
+                    first_group_op = None
+                    first_group_op_index = None
+                    for arithmetic_op in arithmetic_op_group:
+                        if arithmetic_op in working_args:
+                            first_op_index = working_args.index(arithmetic_op)
+                            if (first_group_op_index is None) or (first_op_index < first_group_op_index):
+                                first_group_op = arithmetic_op
+                                first_group_op_index = first_op_index
+
+                    if first_group_op is None:
+                        break
+
+                    if (first_group_op_index < 1) or (first_group_op_index >= (len(working_args) - 1)):
+                        raise ValueError(
+                            f"unable to parse arithmetic calculation"
+                            f" (each operator must have an operand on either side): {working_args}"
+                        )
+
+                    operands = working_args[first_group_op_index-1], working_args[first_group_op_index+1]
+                    for operand in operands:
+                        if not isinstance(operand, Number):
+                            raise ValueError(f"invalid operand for arithmetic calculation: {operand}")
+
+                    arithmetic_result = Constants.CALCULATIONS_LOOKUP[first_group_op](*operands)
+                    working_args = [
+                        *working_args[:first_group_op_index-1],
+                        arithmetic_result,
+                        *working_args[first_group_op_index+2:]
+                    ]
+
+            if len(working_args) > 1:
+                raise ValueError(f"unable to parse remaining arguments in arithmetic calculation: {working_args}")
+
+            if len(depth_indexes) > 0:  # `working_args` is a sub-list
+                depth_last_index = depth_indexes.pop()
+                working_args_container = args
+                for depth_index in depth_indexes:
+                    working_args_container = working_args_container[depth_index]
+
+                working_args_container[depth_last_index] = working_args[0]
+            else:  # This is not a sub-list, so the value in `working_args` is the final result
+                return working_args[0]
 
     @staticmethod
     def __resolve_seeded_random(value: Deferred, card_face: CardFace) -> float:

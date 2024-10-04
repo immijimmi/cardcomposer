@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, getitem, eq, gt, ge, lt, le, ne
+from operator import add, mul, sub, truediv, pow, getitem, eq, gt, ge, lt, le, ne
 from os import path
 from json import dumps, loads
 
@@ -11,6 +11,7 @@ class Constants:
         "*": mul,
         "-": sub,
         "/": truediv,
+        "**": pow,
         "round": round,
         "sum": sum,
         "min": min,

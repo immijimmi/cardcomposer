@@ -3,7 +3,8 @@ from enum import Enum
 
 class DeferredValue(str, Enum):
     SELF = "self"
-    CALCULATION = "calc"
+    STANDARD_CALCULATION = "calc"
+    ARITHMETIC_EQUATION = "arithmetic"
     SEEDED_RANDOM = "seeded"
 
     # Meta
