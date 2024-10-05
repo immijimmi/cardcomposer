@@ -182,7 +182,7 @@ class Methods:
         if limits:
             for limit in limits:
                 limit_type: str = limit["type"]
-                limit_dimension: str = limit["dimension"]
+                limit_dimension: str = limit["dim"]
                 limit_value: float = limit["value"]
                 do_maintain_proportions: bool = limit["do_maintain_proportions"]
 
