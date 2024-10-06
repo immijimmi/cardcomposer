@@ -273,7 +273,16 @@ class PresetValues(Extension):
         # Required params
         size: tuple[float, float] = card_face.resolve_deferred_value(value["size"])
 
-        return Image.new("RGBA", CardFaceMethods.ensure_ints(size))
+        # Optional params
+        fill: Optional[tuple[float, float, float, float]] = (
+            card_face.resolve_deferred_value(value.get("fill", None))
+        )
+
+        image = Image.new("RGBA", CardFaceMethods.ensure_ints(size))
+        if fill is not None:
+            image.paste(CardFaceMethods.ensure_ints(fill), (0, 0, image.size[0], image.size[0]))
+
+        return image
 
     @staticmethod
     def __resolve_image_from_template(value: Deferred, card_face: CardFace) -> Optional[Image.Image]:
