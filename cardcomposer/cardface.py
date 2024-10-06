@@ -170,6 +170,8 @@ class CardFace(Extendable):
             if not do_step:
                 continue
             if do_log_step or do_log_all:
+                step_start = datetime.now()
+
                 step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
                 self.logger.info(f"Processing {type(self).__name__} step: {step_type} (priority={step_priority})")
 
@@ -177,6 +179,10 @@ class CardFace(Extendable):
             try:
                 self.working_image = step_handler(self.working_image, step, self)
                 steps_completed += 1
+
+                if do_log_step or do_log_all:
+                    step_end = datetime.now()
+                    self.logger.info(f"Step completed in {round((step_end - step_start).total_seconds(), 2)}s.")
             # This indicates that any further processing should cease
             except StopIteration:
                 break
