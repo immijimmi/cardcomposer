@@ -24,7 +24,7 @@ class CardFace(Extendable):
             templates_pool: Union[Deferred, dict[CardFaceLabel, "CardFace"]] = {},
             global_cache: dict = {},
             do_skip_generation: Union[Deferred, bool] = False,
-            config: Optional[dict[str]] = None,
+            config: Union[Deferred, Optional[dict[str]]] = None,
             logger=None
     ):
         super().__init__()
@@ -59,10 +59,7 @@ class CardFace(Extendable):
 
         self.config: dict[str]
         if config is not None:
-            self.config = {
-                config_key: self.resolve_deferred_value(config_value)
-                for (config_key, config_value) in config.items()
-            }
+            self.config = self.resolve_deferred_value(config)
         else:
             self.config = {}
 
@@ -249,8 +246,8 @@ class CardFace(Extendable):
             if type(old_value) is tuple:
                 value = tuple(value)
         elif type(value) is dict:
-            for key, item in value.items():
-                value[key] = self.resolve_deferred_value(item)
+            for entry_key, entry_value in value.items():
+                value[entry_key] = self.resolve_deferred_value(entry_value)
 
         # Logging
         if do_log:
