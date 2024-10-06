@@ -167,6 +167,8 @@ class PresetSteps(Extension):
         stroke_fill = card_face.resolve_deferred_value(step.get("stroke_fill", None))
         embedded_color: Optional[bool] = card_face.resolve_deferred_value(step.get("language", None))
 
+        stroke_width = CardFaceMethods.ensure_int(stroke_width)
+
         draw_text_optional_kwargs = {
             key: value for key, value in {
                 "anchor": anchor,

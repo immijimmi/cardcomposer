@@ -27,15 +27,38 @@ class Methods:
             return item
 
     @staticmethod
+    def ensure_int(number: Union[float, int, Any]) -> Union[int, Any]:
+        """
+        Used to ensure a number is an integer, in cases where:
+        - Integer values are a requirement
+        - Losing float precision is acceptable
+
+        Rounding is implemented half-up rather than the default banker's rounding, as consistency is considered
+        more important for the purposes of this project (image manipulation) than preventing the average
+        of aggregated numbers from increasing.
+
+        Should be invoked as late as possible to minimise loss of precision.
+        If the provided data is not a number, it will be returned as-is
+        """
+
+        if type(number) not in (float, int):
+            return number
+
+        if number % 1 == 0.5:
+            return ceil(number)
+        else:
+            return round(number)
+
+    @staticmethod
     def ensure_ints(numbers: Union[tuple[Union[float, int], ...], Any]) -> Union[tuple[int, ...], Any]:
         """
         Used to ensure a number sequence contains only integers, in cases where:
         - Integer values are a requirement
         - Losing float precision is acceptable
 
-        Rounding is implemented half-up rather than the default banker's rounding, as preventing the standard deviation
-        of the provided numbers from increasing is considered more important for the purposes of this project
-        (image manipulation) than preventing their average from drifting.
+        Rounding is implemented half-up rather than the default banker's rounding, as consistency is considered
+        more important for the purposes of this project (image manipulation) than preventing the average
+        of aggregated numbers from increasing.
 
         Should be invoked as late as possible to minimise loss of precision.
         If the provided data is not a tuple or list of only numbers, it will be returned as-is
