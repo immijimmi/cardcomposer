@@ -60,23 +60,36 @@ class PresetSteps(Extension):
             entries = {key: value}
 
         for key, value in entries.items():
-            if not is_lazy:  # Resolve value now rather than waiting until it is needed
-                value = card_face.resolve_deferred_value(value)
-
             if mode == "add":
                 if key in card_face.cache:
-                    raise ValueError(f"key already exists in {type(card_face).__name__} cache: {key}")
+                    raise ValueError(f"key already exists in {type(card_face).__name__} cache (mode='{mode}'): {key}")
                 if is_global and (key in card_face.global_cache):
-                    raise ValueError(f"key already exists in {type(card_face).__name__} global cache: {key}")
+                    raise ValueError(f"key already exists in {type(card_face).__name__} global cache (mode='{mode}'): {key}")
             elif mode == "update":
                 if key not in card_face.cache:
-                    raise KeyError(f"key not found in {type(card_face).__name__} cache: {key}")
-                if is_global and (key not in card_face.cache):
-                    raise KeyError(f"key not found in {type(card_face).__name__} global cache: {key}")
+                    raise KeyError(f"key not found in {type(card_face).__name__} cache (mode='{mode}'): {key}")
+                if is_global and (key not in card_face.global_cache):
+                    raise KeyError(f"key not found in {type(card_face).__name__} global cache (mode='{mode}'): {key}")
             elif mode == "add_or_update":
                 pass
+            elif mode == "add_or_skip":
+                if key in card_face.cache:
+                    if do_log:
+                        card_face.logger.info(
+                            f"Skipping entry - key already exists in {type(card_face).__name__} cache (mode='{mode}'): {key}"
+                        )
+                    continue
+                if is_global and (key in card_face.global_cache):
+                    if do_log:
+                        card_face.logger.info(
+                            f"Skipping entry - key already exists in {type(card_face).__name__} global cache (mode='{mode}'): {key}"
+                        )
+                    continue
             else:
                 raise ValueError(f"unrecognised write mode: {mode}")
+
+            if not is_lazy:  # Resolve value now rather than waiting until it is needed
+                value = card_face.resolve_deferred_value(value)
 
             if do_log:
                 card_face.logger.info(
