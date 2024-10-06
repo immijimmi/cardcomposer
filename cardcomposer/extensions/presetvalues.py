@@ -7,7 +7,7 @@ from collections.abc import Collection
 import random
 
 from ..cardface import CardFace
-from ..types import Deferred, CardFaceLabel
+from ..types import Deferred, CardFaceLabel, ArithmeticOperator
 from ..methods import Methods as CardFaceMethods
 from ..enums import GenericKey, DeferredKey
 from .constants import Constants
@@ -116,7 +116,7 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_arithmetic_equation(value: Deferred, card_face: CardFace):
         # Required params
-        args: Iterable[Union[Deferred, list, float, Literal["+", "-", "*", "/", "**"]]] = (
+        args: Iterable[Union[Deferred, list, float, ArithmeticOperator]] = (
             card_face.resolve_deferred_value(value["args"])
         )
 
@@ -143,7 +143,7 @@ class PresetValues(Extension):
                 continue
 
             # Resolve all arithmetic calculations in current working args list
-            for arithmetic_op_group in (("**",), ("*", "/"), ("+", "-")):
+            for arithmetic_op_group in Constants.ARITHMETIC_ORDER:
                 while True:
                     first_group_op = None
                     first_group_op_index = None

@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, pow, getitem, eq, gt, ge, lt, le, ne
+from operator import add, mul, sub, floordiv, truediv, pow, mod, getitem, eq, gt, ge, lt, le, ne
 from os import path
 from json import dumps, loads
 
@@ -6,12 +6,16 @@ from .methods import Methods
 
 
 class Constants:
+    ARITHMETIC_ORDER = (("**",), ("*", "/", "//", "%"), ("+", "-"))
+
     CALCULATIONS_LOOKUP = {
         "+": add,
         "*": mul,
         "-": sub,
         "/": truediv,
+        "//": floordiv,
         "**": pow,
+        "%": mod,
         "round": round,
         "sum": sum,
         "min": min,
