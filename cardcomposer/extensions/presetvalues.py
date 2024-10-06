@@ -244,7 +244,12 @@ class PresetValues(Extension):
 
     @staticmethod
     def __resolve_working_image(value: Deferred, card_face: CardFace) -> Image.Image:
-        return card_face.working_image
+        image = CardFaceMethods.manipulate_image(
+            card_face.working_image,
+            **CardFaceMethods.unpack_manipulate_image_kwargs(value, card_face)
+        )
+
+        return image
 
     @staticmethod
     def __resolve_parent(value: Deferred, card_face: CardFace) -> Optional[CardFace]:
@@ -255,7 +260,13 @@ class PresetValues(Extension):
         # Required params
         src: str = card_face.resolve_deferred_value(value["src"])
 
-        return Image.open(src)
+        image = Image.open(src)
+        image = CardFaceMethods.manipulate_image(
+            image,
+            **CardFaceMethods.unpack_manipulate_image_kwargs(value, card_face)
+        )
+
+        return image
 
     @staticmethod
     def __resolve_blank_image(value: Deferred, card_face: CardFace) -> Image.Image:
@@ -269,7 +280,13 @@ class PresetValues(Extension):
         # Required params
         label: CardFaceLabel = card_face.resolve_deferred_value(value["label"])
 
-        return card_face.templates_pool[label].generate(parent=card_face)
+        image = card_face.templates_pool[label].generate(parent=card_face)
+        image = CardFaceMethods.manipulate_image(
+            image,
+            **CardFaceMethods.unpack_manipulate_image_kwargs(value, card_face)
+        )
+
+        return image
 
     @staticmethod
     def __resolve_font(value: Deferred, card_face: CardFace) -> ImageFont:
