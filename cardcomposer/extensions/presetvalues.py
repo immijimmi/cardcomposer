@@ -280,7 +280,7 @@ class PresetValues(Extension):
 
         image = Image.new("RGBA", CardFaceMethods.ensure_ints(size))
         if fill is not None:
-            image.paste(CardFaceMethods.ensure_ints(fill), (0, 0, image.size[0], image.size[0]))
+            image.paste(CardFaceMethods.ensure_ints(fill), (0, 0, image.size[0], image.size[1]))
 
         return image
 
