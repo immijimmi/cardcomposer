@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 
 from .methods import Methods
+from .constants import Constants
 from .enums import ConfigKey, GenericKey, DeferredKey, StepKey
 from .types import Deferred, Step, CardFaceLabel
 
@@ -233,7 +234,12 @@ class CardFace(Extendable):
             do_log = False
 
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
+        loops = 0
         while deferred_value_type := self.deferred_value_type(value):
+            loops += 1
+            if loops > Constants.DEFERRED_VALUE_RESOLVER_MAX_LOOPS:
+                raise RecursionError(f"unable to resolve deferred value (max. loops exceeded): {value}")
+
             deferred_value_resolver = self.DEFERRED_VALUE_RESOLVERS[deferred_value_type]
             value = deferred_value_resolver(value, self)
 
