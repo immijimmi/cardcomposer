@@ -24,6 +24,28 @@ class Methods:
             return (False if false_value is None else false_value)
 
     @staticmethod
+    def calc_ands(*conditions):
+        if len(conditions) < 2:
+            raise ValueError(f"expected 2 or more arguments for 'and' operation, got {len(conditions)}")
+
+        for condition in conditions:
+            if not condition:
+                return condition
+
+        return condition
+
+    @staticmethod
+    def calc_ors(*conditions):
+        if len(conditions) < 2:
+            raise ValueError(f"expected 2 or more arguments for 'and' operation, got {len(conditions)}")
+
+        for condition in conditions:
+            if condition:
+                return condition
+
+        return condition
+
+    @staticmethod
     def sanitise_filename(filename: str) -> str:
         pattern = re.compile(
             "|".join(
