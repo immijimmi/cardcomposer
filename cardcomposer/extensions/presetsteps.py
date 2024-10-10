@@ -156,6 +156,10 @@ class PresetSteps(Extension):
             with open(full_path, "w") as file:
                 file.write(data)
 
+        card_face.logger.info(
+            f"{type(card_face).__name__} image (label='{card_face.label}') saved to file: {filename + extension}"
+        )
+
         return image
 
     @staticmethod
