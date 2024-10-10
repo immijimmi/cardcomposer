@@ -204,6 +204,7 @@ class CardFace(Extendable):
 
         self.logger.info(
             f"{type(self).__name__} image (label='{self.label}') successfully generated"
+            f"{'' if parent is None else ' by parent'}"
             f" in {round((gen_end - gen_start).total_seconds(), 2)}s."
         )
         return generated_image
