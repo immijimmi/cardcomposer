@@ -35,6 +35,7 @@ class Constants:
         "int": int,
         "float": float,
         "str": str,
+        "str.title": str.title,
         "str.format": str.format,
         "dict": dict,
         "dict.get": dict.get,
