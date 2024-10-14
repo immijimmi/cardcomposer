@@ -17,6 +17,16 @@ class Methods:
         )
 
     @staticmethod
+    def sanitise_filename(filename: str) -> str:
+        pattern = re.compile(
+            "|".join(
+                (r"\\", "/", ":", r"\*", r"\?", "\"", "<", ">", r"\|")
+            )
+        )
+
+        return pattern.sub("", filename)
+
+    @staticmethod
     def calc_if(is_truthy, true_value=None, false_value=None):
         if is_truthy:
             return (True if true_value is None else true_value)
@@ -46,11 +56,11 @@ class Methods:
         return condition
 
     @staticmethod
-    def sanitise_filename(filename: str) -> str:
-        pattern = re.compile(
-            "|".join(
-                (r"\\", "/", ":", r"\*", r"\?", "\"", "<", ">", r"\|")
-            )
-        )
+    def calc_inverted_dict(target_dict):
+        result = {}
+        for key, value in target_dict.items():
+            if value in result:
+                raise ValueError("cannot invert target dict (contains duplicate values)")
 
-        return pattern.sub("", filename)
+            result[value] = key
+        return result

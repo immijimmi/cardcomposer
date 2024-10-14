@@ -45,5 +45,7 @@ class Constants:
         "is": (lambda a, b: a is b),
         "is_not": (lambda a, b: a is not b),
         "json.dumps": dumps,
-        "json.loads": loads
+        "json.loads": loads,
+        "reversed": reversed,
+        "inverted_dict": Methods.calc_inverted_dict
     }
