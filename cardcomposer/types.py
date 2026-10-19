@@ -1,6 +1,6 @@
-from typing import Optional, Literal, Union
+from typing import Optional, Literal, Union, Any
 
-type Deferred = dict[Union[Literal["deferred"], str]]
-type Step = dict[str]
+type Deferred = dict[Union[Literal["deferred"], str], Any]
+type Step = dict[str, Any]
 type CardFaceLabel = Optional[str]
 type ArithmeticOperator = Literal["+", "-", "*", "/", "//", "**", "%"]

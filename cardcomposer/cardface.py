@@ -43,8 +43,12 @@ class CardFace(Extendable):
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
-        # Deferred values in steps should not be resolved until generation
-        self.steps: tuple[Step, ...] = tuple(steps)
+        """
+        The step origin's label is logged in each step, for debugging purposes.
+        Deferred values in steps should not be resolved until generation
+        """
+        # Deferred values in steps should not be resolved until generation.
+        self.steps: tuple[Step, ...] = ((step | {"source": self.label}) for step in steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
         # Deferred values in the global cache should not be resolved until generation
         self.global_cache: dict = global_cache if global_cache is not None else {}
@@ -97,10 +101,10 @@ class CardFace(Extendable):
 
     @property
     def cumulative_steps(self) -> tuple[Step, ...]:
-        return tuple((
+        return (
             *(step for template in self.cumulative_templates for step in template.steps),
             *self.steps
-        ))
+        )
 
     @property
     def size(self) -> Optional[tuple[int, int]]:
