@@ -1,7 +1,7 @@
 from objectextensions import Extension
 from PIL import Image, ImageFont, ImageDraw
 
-from typing import Iterable, Optional, Sequence, Union, Literal
+from typing import Iterable, Optional, Sequence, Union, Literal, Hashable
 from numbers import Number
 from collections.abc import Collection
 import random
@@ -27,6 +27,7 @@ class PresetValues(Extension):
             DeferredValue.CONFIG: PresetValues.__resolve_config,
             DeferredValue.CACHED: PresetValues.__resolve_cached,
             DeferredValue.STANDARD_CALCULATION: PresetValues.__resolve_standard_calculation,
+            DeferredValue.INDEXES: PresetValues.__resolve_indexes,
             DeferredValue.ARITHMETIC_EQUATION: PresetValues.__resolve_arithmetic_equation,
             DeferredValue.SEEDED_RANDOM: PresetValues.__resolve_seeded_random,
             DeferredValue.MAPPED: PresetValues.__resolve_mapped,
@@ -114,12 +115,42 @@ class PresetValues(Extension):
         return result
 
     @staticmethod
+    def __resolve_indexes(value: Deferred, card_face: CardFace):
+        """
+        Specialised handling of multiple indexing operations inline
+        """
+
+        # Required params
+        value_to_index = card_face.resolve_deferred_value(value["value"])
+        indexes: Iterable[Hashable] = card_face.resolve_deferred_value(value["indexes"])
+
+        # Optional params
+        defaults: Iterable = card_face.resolve_deferred_value(value.get("defaults", []))
+
+        result = value_to_index
+        for loop_index, retrieved_index in enumerate(indexes):
+            try:
+                result = result[retrieved_index]
+            except:
+                try:
+                    return defaults[loop_index]
+                except:
+                    raise ValueError(
+                        f"no value found and no default provided for index #{loop_index} ({retrieved_index})"
+                    )
+
+        return result
+
+    @staticmethod
     def __resolve_arithmetic_equation(value: Deferred, card_face: CardFace):
+        """
+        Specialised handling of multiple arithmetic calculations inline
+        """
+
         # Required params
         args: Iterable[Union[Deferred, list, float, ArithmeticOperator]] = (
             card_face.resolve_deferred_value(value["args"])
         )
-
         args = list(args)
 
         depth_indexes = []

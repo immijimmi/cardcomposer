@@ -5,6 +5,7 @@ class DeferredValue(str, Enum):
     SELF = "self"
     STANDARD_CALCULATION = "calc"
     ARITHMETIC_EQUATION = "arith"
+    INDEXES = "indexes"
     SEEDED_RANDOM = "seeded"
 
     # Meta
