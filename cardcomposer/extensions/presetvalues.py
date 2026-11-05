@@ -117,7 +117,7 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_indexes(value: Deferred, card_face: CardFace):
         """
-        Specialised handling of multiple indexing operations inline
+        Specialised handling of multiple chained indexing operations
         """
 
         # Required params
@@ -144,7 +144,12 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_arithmetic_equation(value: Deferred, card_face: CardFace):
         """
-        Specialised handling of multiple arithmetic calculations inline
+        Specialised handling of multiple arithmetic operations inline.
+        Additionally supports rich comparisons, logical operations, and a subset of other calculations which can
+        receive exactly 2 operands and make sense inline (these are handled after the arithmetic operations,
+        in arbitrary order).
+
+        In place of parentheses, nested lists can be used to force a specific order of operations
         """
 
         # Required params
@@ -176,34 +181,34 @@ class PresetValues(Extension):
             # Resolve all arithmetic calculations in current working args list
             for arithmetic_op_group in Constants.ARITHMETIC_ORDER:
                 while True:
-                    first_group_op = None
-                    first_group_op_index = None
+                    next_group_op = None
+                    next_group_op_index = None
                     for arithmetic_op in arithmetic_op_group:
                         if arithmetic_op in working_args:
-                            first_op_index = working_args.index(arithmetic_op)
-                            if (first_group_op_index is None) or (first_op_index < first_group_op_index):
-                                first_group_op = arithmetic_op
-                                first_group_op_index = first_op_index
+                            next_op_index = working_args.index(arithmetic_op)
+                            if (next_group_op_index is None) or (next_op_index < next_group_op_index):
+                                next_group_op = arithmetic_op
+                                next_group_op_index = next_op_index
 
-                    if first_group_op is None:
+                    if next_group_op is None:
                         break
 
-                    if (first_group_op_index < 1) or (first_group_op_index >= (len(working_args) - 1)):
+                    if (next_group_op_index < 1) or (next_group_op_index >= (len(working_args) - 1)):
                         raise ValueError(
                             f"unable to parse arithmetic calculation"
                             f" (each operator must have an operand on either side): {working_args}"
                         )
 
-                    operands = working_args[first_group_op_index-1], working_args[first_group_op_index+1]
+                    operands = working_args[next_group_op_index-1], working_args[next_group_op_index+1]
                     for operand in operands:
                         if not isinstance(operand, Number):
                             raise ValueError(f"invalid operand for arithmetic calculation: {operand}")
 
-                    arithmetic_result = Constants.CALCULATIONS_LOOKUP[first_group_op](*operands)
+                    arithmetic_result = Constants.CALCULATIONS_LOOKUP[next_group_op](*operands)
                     working_args = [
-                        *working_args[:first_group_op_index-1],
+                        *working_args[:next_group_op_index-1],
                         arithmetic_result,
-                        *working_args[first_group_op_index+2:]
+                        *working_args[next_group_op_index+2:]
                     ]
 
             if len(working_args) > 1:
