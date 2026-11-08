@@ -9,12 +9,13 @@ from .methods import Methods
 
 class Constants:
     ARITHMETIC_ORDER = (
-        ("**",), ("*", "/", "//", "%"), ("+", "-"),
-        (
+        {"[]"},
+        {"**"}, {"*", "/", "//", "%"}, {"+", "-"},
+        {
             "==", "!=", ">", ">=", "<", "<=", "is", "is not",
-            "[]", "contains", "in", "not in",
+            "contains", "in", "not in",
             "and", "or"
-        )
+        }
     )
 
     CALCULATIONS_LOOKUP = {

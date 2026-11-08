@@ -225,11 +225,12 @@ class CardFace(Extendable):
         """
 
         # To ensure the provided value is not edited in place within this method, a copy is made
-        # Necessary to ensure due to the recursive nature of this method
+        # Necessary due to the recursive nature of this method
         value = Methods.try_copy(value)
 
-        # Determining whether to log the resolved value
         deferred_value_type = self.deferred_value_type(value)
+
+        # Determining whether to log the resolved value
         if deferred_value_type:
             # Optional params
             do_log: bool = self.resolve_deferred_value(value.get(GenericKey.DO_LOG, False))
@@ -240,13 +241,15 @@ class CardFace(Extendable):
 
         # Resolve deferred value types in a loop until the remaining value is not a deferred value
         loops = 0
-        while deferred_value_type := self.deferred_value_type(value):
+        while deferred_value_type:
             loops += 1
             if loops > Constants.DEFERRED_VALUE_RESOLVER_MAX_LOOPS:
                 raise RecursionError(f"unable to resolve deferred value (max. loops exceeded): {value}")
 
             deferred_value_resolver = self.DEFERRED_VALUE_RESOLVERS[deferred_value_type]
             value = deferred_value_resolver(value, self)
+
+            deferred_value_type = self.deferred_value_type(value)
 
         # Recursive conversion
         if type(value) in (tuple, list):
