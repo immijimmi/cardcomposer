@@ -33,7 +33,7 @@ class Constants:
         "getitem": getitem,
         "[]": getitem,  # Alias. To slice using `getitem`, a `slice` object must be passed in
         "getattr": getattr,
-        ".": getattr,  # Alias. Note that `getattr` does not respect name mangling as `.` does
+        ".": getattr,  # Alias. Note that `getattr` does not respect name mangling as native dot accessing does
         "path.join": path.join,
         "if": Methods.calc_if,
         "contains": contains,
