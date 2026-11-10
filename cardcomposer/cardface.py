@@ -38,7 +38,7 @@ class CardFace(Extendable):
         self.cache: dict = {}
         # Tracks the image being generated during `.generate()`
         self.working_image: Optional[Image.Image] = None
-        # Tracks the parent CardFace responsible for invoking `.generate()` on this object, if any
+        # If this CardFace's `.generate()` is run by another CardFace rather than at top-level, this tracks the caller
         self.parent: Optional["CardFace"] = None
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
