@@ -44,13 +44,17 @@ class CardFace(Extendable):
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
         """
-        The step origin's label is logged in each step, for debugging purposes.
-        Deferred values in steps should not be resolved until generation
+        Each step has the origin template's label added to it here, for debugging purposes.
+        Deferred values in steps are left unresolved until used during generation
         """
-        # Deferred values in steps should not be resolved until generation.
-        self.steps: tuple[Step, ...] = ((step | {"source": self.label}) for step in steps)
+        self.steps: tuple[Step, ...] = tuple((step | {"source": self.label}) for step in steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
-        # Deferred values in the global cache should not be resolved until generation
+        """
+        Optional shared storage between any templates which receive the same global cache container (or which all use
+        the default container), to allow for minimising redundant work.
+        Deferred values stored in the global cache are not automatically resolved before storing; if this is desired
+        for optimisation, setting the flag 'is_lazy' to `False` will pre-resolve the value when writing to cache
+        """
         self.global_cache: dict = global_cache if global_cache is not None else {}
         self.do_skip_generation: bool = self.resolve_deferred_value(do_skip_generation)
         self.logger = logger or logging.root
