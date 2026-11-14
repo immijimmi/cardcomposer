@@ -80,10 +80,7 @@ class PresetValues(Extension):
     @staticmethod
     def __resolve_standard_calculation(value: Deferred, card_face: CardFace):
         """
-        Invokes a single calculation from a limited list of options, passing in the provided arguments.
-        The provided arguments may themselves be any valid deferred value
-        (further calculations, references to cached values etc.), and are not limited to representing
-        numbers - any types which are valid parameters for the calculation will equally suffice
+        Invokes a single calculation or function from a limited list of options, passing in the provided arguments
         """
 
         # Required params
@@ -147,7 +144,7 @@ class PresetValues(Extension):
         Specialised handling of arithmetic equations inline. Follows mathematical order of operations.
         Also supports comparisons, logical operations, indexing and nested deferred values.
 
-        In place of parentheses, nested lists can be used to force a specific order.
+        In place of parentheses, nested lists can be used to force a specific order
         """
 
         def is_equation(value_to_check):
