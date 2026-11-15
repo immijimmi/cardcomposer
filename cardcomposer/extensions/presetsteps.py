@@ -60,11 +60,14 @@ class PresetSteps(Extension):
             entries = {key: value}
 
         for key, value in entries.items():
+            # Validate write mode and check if an entry already exists in the cache for this key
             if mode == "add":
                 if key in card_face.cache:
                     raise ValueError(f"key already exists in {type(card_face).__name__} cache (mode='{mode}'): {key}")
                 if is_global and (key in card_face.global_cache):
-                    raise ValueError(f"key already exists in {type(card_face).__name__} global cache (mode='{mode}'): {key}")
+                    raise ValueError(
+                        f"key already exists in {type(card_face).__name__} global cache (mode='{mode}'): {key}"
+                    )
             elif mode == "update":
                 if key not in card_face.cache:
                     raise KeyError(f"key not found in {type(card_face).__name__} cache (mode='{mode}'): {key}")
