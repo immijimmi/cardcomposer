@@ -7,6 +7,11 @@ from json import dumps, loads
 from .methods import Methods
 
 
+# Implemented in an associated step, to allow a JSON card spec to intentionally raise a fatal exception
+class SpecificationError(RuntimeError):
+    pass
+
+
 class Constants:
     ARITHMETIC_ORDER = (
         {"[]"},

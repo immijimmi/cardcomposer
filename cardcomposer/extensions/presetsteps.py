@@ -1,7 +1,7 @@
 from objectextensions import Extension
 from PIL import Image, ImageFont, ImageDraw
 
-from typing import Optional, Sequence, Union, Any
+from typing import Optional, Sequence, Union, Any, Never
 from os import path
 from pathlib import Path
 
@@ -10,6 +10,7 @@ from ..types import Deferred, Step
 from ..methods import Methods as CardFaceMethods
 from ..enums import GenericKey
 from .methods import Methods
+from .constants import SpecificationError
 
 
 class PresetSteps(Extension):
@@ -25,7 +26,8 @@ class PresetSteps(Extension):
             "save": PresetSteps.__step_save,
             "write_text": PresetSteps.__step_write_text,
             "stop": PresetSteps.__step_stop,
-            "cancel": PresetSteps.__step_cancel
+            "cancel": PresetSteps.__step_cancel,
+            "error": PresetSteps.__step_error
         }
 
         # To prevent mutating the dict on the base class
@@ -239,9 +241,16 @@ class PresetSteps(Extension):
         return image
 
     @staticmethod
-    def __step_stop(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
+    def __step_stop(image: Image.Image, step: Step, card_face: "CardFace") -> Never:
         raise StopIteration
 
     @staticmethod
-    def __step_cancel(image: Image.Image, step: Step, card_face: "CardFace") -> Image.Image:
+    def __step_cancel(image: Image.Image, step: Step, card_face: "CardFace") -> Never:
         raise NotImplementedError
+
+    @staticmethod
+    def __step_error(image: Image.Image, step: Step, card_face: "CardFace") -> Never:
+        # Required params
+        msg: str = card_face.resolve_deferred_value(step["msg"])
+
+        raise SpecificationError(msg)
