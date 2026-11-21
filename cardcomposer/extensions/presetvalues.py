@@ -385,7 +385,7 @@ class PresetValues(Extension):
         features: Optional[Sequence[str]] = card_face.resolve_deferred_value(value.get("features", None))
         language: Optional[str] = card_face.resolve_deferred_value(value.get("language", None))
         stroke_width: Optional[int] = card_face.resolve_deferred_value(value.get("stroke_width", None))
-        embedded_color: Optional[bool] = card_face.resolve_deferred_value(value.get("language", None))
+        embedded_color: Optional[bool] = card_face.resolve_deferred_value(value.get("embedded_color", None))
 
         textbbox_optional_kwargs = {
             key: value for key, value in {
