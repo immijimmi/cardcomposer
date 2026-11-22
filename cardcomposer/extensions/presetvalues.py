@@ -74,7 +74,7 @@ class PresetValues(Extension):
         except KeyError:
             if "default" not in value:
                 raise KeyError(
-                    f"no value found in {type(card_face).__name__} cache (label={card_face.label})"
+                    f"no value found in {type(card_face).__name__} cache (label={card_face.label})" +
                     f" and no default provided for key: {cache_key}"
                 )
 
@@ -125,7 +125,7 @@ class PresetValues(Extension):
         indexes: Iterable[Hashable] = card_face.resolve_deferred_value(value["indexes"])
 
         # Optional params
-        defaults: Iterable = card_face.resolve_deferred_value(value.get("defaults", []))
+        defaults: Sequence = card_face.resolve_deferred_value(value.get("defaults", []))
 
         result = value_to_index
         for loop_index, retrieved_index in enumerate(indexes):
@@ -178,7 +178,7 @@ class PresetValues(Extension):
                             # Ensures that the operator has an operand on either side of it
                             if (item_index == 0) or (item_index == (len(equation_to_reduce)-1)):
                                 raise ValueError(
-                                    f"unable to parse equation"
+                                    f"unable to parse equation" +
                                     f" (each operator must have an operand on either side): {equation_to_reduce}"
                                 )
 
@@ -313,7 +313,7 @@ class PresetValues(Extension):
         image = card_face.templates_pool[label].generate(parent=card_face)
         if image is None:
             raise SpecificationError(
-                "when attempting to resolve a deferred image from the specified template,"
+                "when attempting to resolve a deferred image from the specified template," +
                 f" no image was generated (label={card_face.label})"
             )
 

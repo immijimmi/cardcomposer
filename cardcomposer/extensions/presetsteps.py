@@ -81,13 +81,15 @@ class PresetSteps(Extension):
                 if key in card_face.cache:
                     if do_log:
                         card_face.logger.info(
-                            f"Skipping entry - key already exists in {type(card_face).__name__} cache (mode='{mode}'): {key}"
+                            f"Skipping entry - key already exists in {type(card_face).__name__} cache" +
+                            " (mode='{mode}'): {key}"
                         )
                     continue
                 if is_global and (key in card_face.global_cache):
                     if do_log:
                         card_face.logger.info(
-                            f"Skipping entry - key already exists in {type(card_face).__name__} global cache (mode='{mode}'): {key}"
+                            f"Skipping entry - key already exists in {type(card_face).__name__} global cache" +
+                            " (mode='{mode}'): {key}"
                         )
                     continue
             else:

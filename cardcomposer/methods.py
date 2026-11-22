@@ -187,7 +187,7 @@ class Methods:
                         resized_width = image.size[0] * (resize_to[1] / image.size[1])
                     except ZeroDivisionError:  # Edge case where the image being resized is 0px tall
                         raise SpecificationError(
-                            "unable to resize the width of an image proportionally to the resize of its height,"
+                            "unable to resize the width of an image proportionally to the resize of its height," +
                             f" as its initial height is 0. Received parameters: {resize_to}"
                         ) from None
                 else:
@@ -200,7 +200,7 @@ class Methods:
                         resized_height = image.size[1] * (resize_to[0] / image.size[0])
                     except ZeroDivisionError:  # Edge case where the image being resized is 0px wide
                         raise SpecificationError(
-                            "unable to resize the height of an image proportionally to the resize of its width,"
+                            "unable to resize the height of an image proportionally to the resize of its width," +
                             f" as its initial width is 0. Received parameters: {resize_to}"
                         ) from None
                 else:
@@ -231,7 +231,7 @@ class Methods:
                         other_dim_resized_value = other_dim_value * (limit_value / limited_dim_value)
                     except ZeroDivisionError:  # Edge case where the image being resized is 0px tall/wide
                         raise SpecificationError(
-                            "unable to resize the width/height of an image proportionally while applying",
+                            "unable to resize the width/height of an image proportionally while applying" +
                             f" a limit, due to division by zero. Received parameters: {limit}"
                         ) from None
                 else:

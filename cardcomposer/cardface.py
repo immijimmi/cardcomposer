@@ -78,7 +78,7 @@ class CardFace(Extendable):
         if self.is_template:
             if self.label in self.templates_pool:
                 raise ValueError(
-                    f"unable to add {type(self).__name__} to templates pool"
+                    f"unable to add {type(self).__name__} to templates pool" +
                     f" (a template with the same label already exists): {self.label}"
                 )
             self.templates_pool[self.label] = self
@@ -157,7 +157,7 @@ class CardFace(Extendable):
         # Sorting of priority values wrapped in tuples will only fail if some but not all steps have priority values
         except TypeError:
             raise SpecificationError(
-                f"could not sort {type(self).__name__} steps; not all priority values could be compared."
+                f"could not sort {type(self).__name__} steps; not all priority values could be compared." +
                 " Steps either must all have comparable priority values, or must all have no set priority"
             ) from None
 
@@ -211,8 +211,8 @@ class CardFace(Extendable):
             return None  # No image is returned if no processing was completed
 
         self.logger.info(
-            f"{type(self).__name__} image (label='{self.label}') successfully generated"
-            f"{'' if parent is None else ' by parent'}"
+            f"{type(self).__name__} image (label='{self.label}') successfully generated" +
+            f"{'' if parent is None else ' by parent'}" +
             f" in {round((gen_end - gen_start).total_seconds(), 2)}s."
         )
         return generated_image
