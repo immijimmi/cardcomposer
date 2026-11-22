@@ -144,10 +144,9 @@ class CardFace(Extendable):
         for step_index, step in enumerate(self.cumulative_steps):
             # Optional params
             """
-            Step priority is used as a primary sorting key for steps, with
-            the initial ordering of the steps used as the secondary key.
-            Any comparable set of values (numbers or not) are valid.
-            If provided priorities are not comparable, priority will not be used at all
+            Step priority is used as a primary sorting key for steps, with the initial ordering of the steps
+            used as the secondary key. Any comparable set of values can be used as step priorities.
+            If no priorities are provided, sorting defaults to initial ordering
             """
             step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
             steps_sort_keys.append({"step": step, "index": step_index, "priority": step_priority})
