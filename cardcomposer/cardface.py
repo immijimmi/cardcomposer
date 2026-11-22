@@ -157,9 +157,9 @@ class CardFace(Extendable):
         # Sorting of priority values wrapped in tuples will only fail if some but not all steps have priority values
         except TypeError:
             raise SpecificationError(
-                f"could not sort {type(self).__name__} steps; found priority values for some but not all steps,"
-                " making them incomparable"
-            )
+                f"could not sort {type(self).__name__} steps; not all priority values could be compared."
+                " Steps either must all have comparable priority values, or must all have no set priority"
+            ) from None
 
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
