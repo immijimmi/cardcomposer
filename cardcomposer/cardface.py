@@ -125,10 +125,9 @@ class CardFace(Extendable):
             return None
 
         if not self.size:
-            self.logger.warning(
-                f"Unable to generate image from {type(self).__name__} (label='{self.label}'); No size set."
+            raise SpecificationError(
+                f"unable to generate image from {type(self).__name__} (label='{self.label}'); no size set"
             )
-            return None
 
         self.cache.clear()
         self.cache.update(self.global_cache)
