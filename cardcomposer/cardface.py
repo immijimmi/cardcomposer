@@ -265,7 +265,9 @@ class CardFace(Extendable):
             if type(old_value) is tuple:
                 value = tuple(value)
         elif type(value) is dict:
-            for entry_key, entry_value in value.items():
+            old_value = value
+            value = {}
+            for entry_key, entry_value in old_value.items():
                 value[entry_key] = self.resolve_deferred_value(entry_value)
 
         # Logging
