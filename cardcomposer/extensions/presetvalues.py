@@ -3,6 +3,7 @@ from PIL import Image, ImageFont, ImageDraw
 
 from typing import Iterable, Optional, Sequence, Union, Literal, Hashable
 from numbers import Number
+from math import floor
 from collections.abc import Collection
 import random
 
@@ -224,7 +225,7 @@ class PresetValues(Extension):
 
         result = mult * random.random()
         if is_int:
-            result = round(result)
+            result = floor(result)
 
         return result
 
