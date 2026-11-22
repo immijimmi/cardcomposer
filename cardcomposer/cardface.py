@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 
 from .methods import Methods
-from .constants import Constants
+from .constants import Constants, SpecificationError
 from .enums import ConfigKey, GenericKey, DeferredKey, StepKey
 from .types import Deferred, Step, CardFaceLabel
 
@@ -141,6 +141,7 @@ class CardFace(Extendable):
         self.working_image = Image.new("RGBA", self.size)
 
         # Sorting steps
+        has_priority_values = False
         steps_sort_keys: list[dict[str]] = []
         for step_index, step in enumerate(self.cumulative_steps):
             # Optional params
@@ -151,15 +152,26 @@ class CardFace(Extendable):
             If provided priorities are not comparable, priority will not be used at all
             """
             step_priority = self.resolve_deferred_value(step.get(StepKey.PRIORITY, None))
+            if step_priority is not None:
+                has_priority_values = True
 
             steps_sort_keys.append({"step": step, "index": step_index, "priority": step_priority})
 
         try:
             steps_sort_keys.sort(key=lambda step_keys: (step_keys["priority"], step_keys["index"]))
             self.logger.debug(f"Sorted {type(self).__name__} steps.")
-        except TypeError:  # Unable to sort by priority
-            self.logger.warning(f"Unable to sort {type(self).__name__} steps by priority.")
-            steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
+        except TypeError:
+            if has_priority_values:
+                raise SpecificationError(
+                    f"could not sort {type(self).__name__} steps; found priority values for some but not all steps,"
+                    " making them incomparable"
+                )
+            else:
+                self.logger.warning(
+                    f"No priority values found for {type(self).__name__} steps;"
+                    " they will be processed in the default order."
+                )
+                steps_sort_keys.sort(key=lambda step_keys: step_keys["index"])
 
         ordered_steps = tuple(step_sort_keys["step"] for step_sort_keys in steps_sort_keys)
         # Executing steps
