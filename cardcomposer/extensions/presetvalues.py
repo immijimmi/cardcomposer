@@ -314,7 +314,7 @@ class PresetValues(Extension):
         if image is None:
             raise SpecificationError(
                 "when attempting to resolve a deferred image from the specified template," +
-                f" no image was generated (label={card_face.label})"
+                f" no image was generated (label={card_face.label}, template label={label})"
             )
 
         image = CardFaceMethods.manipulate_image(
