@@ -188,7 +188,7 @@ class Methods:
                     except ZeroDivisionError:  # Edge case where the image being resized is 0px tall
                         raise SpecificationError(
                             "unable to resize the width of an image proportionally to the resize of its height,"
-                            " as its initial height is 0"
+                            f" as its initial height is 0. Received parameters: {resize_to}"
                         )
                 else:
                     resized_width = resize_to[0]
@@ -201,7 +201,7 @@ class Methods:
                     except ZeroDivisionError:  # Edge case where the image being resized is 0px wide
                         raise SpecificationError(
                             "unable to resize the height of an image proportionally to the resize of its width,"
-                            " as its initial width is 0"
+                            f" as its initial width is 0. Received parameters: {resize_to}"
                         )
                 else:
                     resized_height = resize_to[1]
