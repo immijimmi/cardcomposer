@@ -10,6 +10,7 @@ from ..cardface import CardFace
 from ..types import Deferred, CardFaceLabel, ArithmeticOperator
 from ..methods import Methods as CardFaceMethods
 from ..enums import GenericKey, DeferredKey
+from ..constants import SpecificationError
 from .constants import Constants
 from .enums import DeferredValue
 
@@ -309,6 +310,12 @@ class PresetValues(Extension):
         label: CardFaceLabel = card_face.resolve_deferred_value(value["label"])
 
         image = card_face.templates_pool[label].generate(parent=card_face)
+        if image is None:
+            raise SpecificationError(
+                "when attempting to resolve a deferred image from the specified template,"
+                f" no image was generated (label={card_face.label})"
+            )
+
         image = CardFaceMethods.manipulate_image(
             image,
             **CardFaceMethods.unpack_manipulate_image_kwargs(value, card_face)
