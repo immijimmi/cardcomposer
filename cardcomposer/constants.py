@@ -1,3 +1,8 @@
+# Exception specifically to be raised due to an unresolvable issue with a JSON card spec
+class SpecificationError(RuntimeError):
+    pass
+
+
 class Constants:
     CARDS_DATA_MANIFEST_FILE_PATH = "cards_manifest.json"
     DEFAULT_CARDS_DATA_FILE_PATH = "cards.json"

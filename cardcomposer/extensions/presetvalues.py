@@ -106,7 +106,7 @@ class PresetValues(Extension):
             result = value["default"]
             if do_log:
                 card_face.logger.info(
-                    f"Calculation failed, using default value ({value["default"]}): {operation.__name__}{operands}"
+                    f"Calculation failed, using default value ({result}): {operation.__name__}{operands}"
                 )
 
         return result

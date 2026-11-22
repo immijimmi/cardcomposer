@@ -9,8 +9,8 @@ from ..cardface import CardFace
 from ..types import Deferred, Step
 from ..methods import Methods as CardFaceMethods
 from ..enums import GenericKey
+from ..constants import SpecificationError
 from .methods import Methods
-from .constants import SpecificationError
 
 
 class PresetSteps(Extension):
