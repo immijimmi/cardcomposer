@@ -306,16 +306,19 @@ class PresetValues(Extension):
         return image
 
     @staticmethod
-    def __resolve_image_from_template(value: Deferred, card_face: CardFace) -> Optional[Image.Image]:
+    def __resolve_image_from_template(value: Deferred, card_face: CardFace):
         # Required params
         label: CardFaceLabel = card_face.resolve_deferred_value(value["label"])
 
         image = card_face.templates_pool[label].generate(parent=card_face)
         if image is None:
-            raise SpecificationError(
-                "when attempting to resolve a deferred image from the specified template," +
-                f" no image was generated (label={card_face.label}, template label={label})"
-            )
+            if "default" not in value:
+                raise SpecificationError(
+                    "when attempting to resolve a deferred image from the specified template, no image was generated" +
+                    f" and no default value was provided (label={card_face.label}, template label={label})"
+                )
+            else:
+                return value["default"]
 
         image = CardFaceMethods.manipulate_image(
             image,
