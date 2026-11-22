@@ -310,11 +310,19 @@ class PresetValues(Extension):
         # Required params
         label: CardFaceLabel = card_face.resolve_deferred_value(value["label"])
 
-        image = card_face.templates_pool[label].generate(parent=card_face)
+        try:
+            template = card_face.templates_pool[label]
+        except KeyError:
+            raise SpecificationError(
+                "when attempting to resolve an image value from the specified template," +
+                f" no template was found under the provided label: {label}"
+            ) from None
+
+        image = template.generate(parent=card_face)
         if image is None:
             if "default" not in value:
                 raise SpecificationError(
-                    "when attempting to resolve a deferred image from the specified template, no image was generated" +
+                    "when attempting to resolve an image value from the specified template, no image was generated" +
                     f" and no default value was provided (label={card_face.label}, template label={label})"
                 )
             else:
