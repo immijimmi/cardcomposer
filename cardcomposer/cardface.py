@@ -58,10 +58,18 @@ class CardFace(Extendable):
         else:
             self.config = {}
 
+        self.templates_pool: dict[CardFaceLabel, "CardFace"]
+        if self.deferred_value_type(templates_pool):
+            self.templates_pool = self.resolve_deferred_value(templates_pool)
+        else:
+            # Done this way to prevent the object identity of the templates pool from changing if it isn't deferred
+            self.templates_pool = templates_pool
+
         self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
+
         """
         Each step has the origin template's label added to it here, for debugging purposes.
         Deferred values in steps are left unresolved until used during generation
@@ -69,13 +77,6 @@ class CardFace(Extendable):
         self.steps: tuple[Step, ...] = tuple((step | {"source": self.label}) for step in steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
         self.do_skip_generation: bool = self.resolve_deferred_value(do_skip_generation)
-
-        self.templates_pool: dict[CardFaceLabel, "CardFace"]
-        if self.deferred_value_type(templates_pool):
-            self.templates_pool = self.resolve_deferred_value(templates_pool)
-        else:
-            # Done this way to prevent the object identity of the templates pool from changing if it isn't deferred
-            self.templates_pool = templates_pool
 
         # Add to templates pool, if this object is a template
         if self.is_template:
