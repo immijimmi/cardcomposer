@@ -65,8 +65,6 @@ class CardFace(Extendable):
             # Done this way to prevent the object identity of the templates pool from changing if it isn't deferred
             self.templates_pool = templates_pool
 
-        self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
-
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
 
@@ -86,6 +84,13 @@ class CardFace(Extendable):
                     f" (a template with the same label already exists): {self.label}"
                 )
             self.templates_pool[self.label] = self
+
+        """
+        Size is left till last, because during instantiation some templates (including those which specify a size)
+        may not yet be instantiated, meaning that the size value cannot be trusted until after the constructor
+        has completed
+        """
+        self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
 
     @property
     def templates(self) -> tuple["CardFace", ...]:
