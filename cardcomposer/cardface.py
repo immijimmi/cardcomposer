@@ -237,10 +237,6 @@ class CardFace(Extendable):
         Recursively converts sub-values within any dict, list or tuple that a deferred value may be resolved into
         """
 
-        # To ensure the provided value is not edited in place within this method, a copy is made
-        # Necessary due to the recursive nature of this method
-        value = Methods.try_copy(value)
-
         deferred_value_type = self.deferred_value_type(value)
 
         # Determining whether to log the resolved value
@@ -260,6 +256,12 @@ class CardFace(Extendable):
                 raise RecursionError(f"unable to resolve deferred value (max. loops exceeded): {value}")
 
             deferred_value_resolver = self.DEFERRED_VALUE_RESOLVERS[deferred_value_type]
+
+            """
+            To ensure the provided value is not edited in place within this method, a copy is made before passing
+            to each resolver
+            """
+            value = Methods.try_copy(value)
             value = deferred_value_resolver(value, self)
 
             deferred_value_type = self.deferred_value_type(value)
