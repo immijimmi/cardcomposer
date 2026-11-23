@@ -30,16 +30,35 @@ class CardFace(Extendable):
     ):
         super().__init__()
 
+        self.logger = logger or logging.root
+
+        # Tracks the image being generated during `.generate()`
+        self.working_image: Optional[Image.Image] = None
+        # If this CardFace's `.generate()` is run by another CardFace rather than at top-level, this tracks the caller
+        self.parent: Optional["CardFace"] = None
+
         """
         The cache can be used to store pieces of re-usable data, typically referencing various aspects of the card face
         (e.g. the coords of a specific point location on the card). They can be added by specific steps, and read during
         any subsequent steps once added
         """
         self.cache: dict = {}
-        # Tracks the image being generated during `.generate()`
-        self.working_image: Optional[Image.Image] = None
-        # If this CardFace's `.generate()` is run by another CardFace rather than at top-level, this tracks the caller
-        self.parent: Optional["CardFace"] = None
+        """
+        Optional shared storage between any templates which receive the same global cache container (or which all use
+        the default container), to allow for minimising redundant work.
+        Deferred values stored in the global cache are not automatically resolved before storing; if this is desired
+        for optimisation, setting the flag 'is_lazy' to `False` will pre-resolve the value when writing to cache
+        """
+        self.global_cache: dict = global_cache if global_cache is not None else {}
+        self.cache.update(self.global_cache)
+
+        self.config: dict[str]
+        if config is not None:
+            self.config = self.resolve_deferred_value(config)
+        else:
+            self.config = {}
+
+        self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
 
         self.label: CardFaceLabel = self.resolve_deferred_value(label)
         self.templates_labels: tuple[CardFaceLabel, ...] = tuple(self.resolve_deferred_value(templates_labels))
@@ -49,15 +68,7 @@ class CardFace(Extendable):
         """
         self.steps: tuple[Step, ...] = tuple((step | {"source": self.label}) for step in steps)
         self.is_template: bool = self.resolve_deferred_value(is_template)
-        """
-        Optional shared storage between any templates which receive the same global cache container (or which all use
-        the default container), to allow for minimising redundant work.
-        Deferred values stored in the global cache are not automatically resolved before storing; if this is desired
-        for optimisation, setting the flag 'is_lazy' to `False` will pre-resolve the value when writing to cache
-        """
-        self.global_cache: dict = global_cache if global_cache is not None else {}
         self.do_skip_generation: bool = self.resolve_deferred_value(do_skip_generation)
-        self.logger = logger or logging.root
 
         self.templates_pool: dict[CardFaceLabel, "CardFace"]
         if self.deferred_value_type(templates_pool):
@@ -65,14 +76,6 @@ class CardFace(Extendable):
         else:
             # Done this way to prevent the object identity of the templates pool from changing if it isn't deferred
             self.templates_pool = templates_pool
-
-        self.config: dict[str]
-        if config is not None:
-            self.config = self.resolve_deferred_value(config)
-        else:
-            self.config = {}
-
-        self._size: Optional[tuple[int, int]] = tuple(size) if (size := self.resolve_deferred_value(size)) else None
 
         # Add to templates pool, if this object is a template
         if self.is_template:
