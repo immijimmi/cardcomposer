@@ -160,7 +160,7 @@ class PresetSteps(Extension):
         elif issubclass(type(data), Image.Image):
             data.save(full_path)
         else:
-            with open(full_path, "w") as file:
+            with open(full_path, "w", encoding="utf-8") as file:
                 file.write(data)
 
         card_face.logger.info(

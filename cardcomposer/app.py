@@ -23,7 +23,8 @@ class App:
             self.logger.debug(
                 f"Attempting to load cards data manifest from {Constants.CARDS_DATA_MANIFEST_FILE_PATH}..."
             )
-            with open(Constants.CARDS_DATA_MANIFEST_FILE_PATH, "r") as manifest_file:
+            # 'utf-8-sig' is a more compatible variant of 'utf-8' for reading files
+            with open(Constants.CARDS_DATA_MANIFEST_FILE_PATH, "r", encoding="utf-8-sig") as manifest_file:
                 cards_data_paths: list[str] = loads(manifest_file.read())
             self.logger.info(f"Manifest successfully loaded.")
         except FileNotFoundError:
@@ -36,7 +37,7 @@ class App:
         config: Optional[dict[str]]
         try:
             self.logger.debug(f"Attempting to load config from {Constants.CONFIG_FILE_PATH}...")
-            with open(Constants.CONFIG_FILE_PATH, "r") as config_file:
+            with open(Constants.CONFIG_FILE_PATH, "r", encoding="utf-8-sig") as config_file:
                 config: dict[str] = loads(config_file.read())
             self.logger.info(f"Config successfully loaded.")
         except FileNotFoundError:
@@ -58,7 +59,7 @@ class App:
         # Load cards data from each file
         cards_data: list[dict[str]] = []
         for file_path in cards_data_files_paths:
-            with open(file_path, "r") as data_file:
+            with open(file_path, "r", encoding="utf-8-sig") as data_file:
                 file_cards_data: Union[dict[str], list[dict[str]]] = loads(data_file.read())
 
             if type(file_cards_data) is list:
