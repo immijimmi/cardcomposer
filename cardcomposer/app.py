@@ -12,10 +12,10 @@ from .types import Deferred, Step, CardFaceLabel
 
 
 class App:
-    def __init__(self):
+    def __init__(self, log_level=logging.INFO):
         self.logger = logging.getLogger(CardFace.__name__)
         self.logger.addHandler(logging.StreamHandler(stderr))
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(log_level)
 
     def generate_cardfaces(self) -> list[CardFace]:
         # Load manifest of all files containing card data
