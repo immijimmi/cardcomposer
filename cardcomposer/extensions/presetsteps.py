@@ -118,24 +118,19 @@ class PresetSteps(Extension):
         # Optional params
         is_position_centre: Optional[bool] = card_face.resolve_deferred_value(step.get("is_position_centre", False))
 
+        if embed_image.mode != "RGBA":
+            embed_image = embed_image.convert("RGBA")
+
         embed_image = CardFaceMethods.manipulate_image(
             embed_image,
             **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
+        # Must be calculated *after* image manipulation, to work from accurate dimensions
         if is_position_centre:
             position = Methods.reposition_centre_to_topleft(position, embed_image)
-        paste_box = (
-            position[0],
-            position[1],
-            position[0] + embed_image.size[0],
-            position[1] + embed_image.size[1]
-        )
 
-        compatibility_layer = Image.new("RGBA", image.size)
-        compatibility_layer.paste(embed_image, CardFaceMethods.ensure_ints(paste_box))
-
-        image = Image.alpha_composite(image, compatibility_layer)
+        image.alpha_composite(embed_image, CardFaceMethods.ensure_ints(position))
         return image
 
     @staticmethod
@@ -208,38 +203,32 @@ class PresetSteps(Extension):
         }
         text_bbox_optional_kwargs = {
             key: value for key, value in draw_text_optional_kwargs.items()
-            if key not in ["stroke_fill"]
+            if key not in {"stroke_fill"}
         }  # `ImageDraw.textbbox()` does not support all kwargs that `ImageDraw.text()` does
 
+        # Generate a bounding box for the text, and adjust positioning on text layer accordingly
         bbox_layer = Image.new("RGB", (0, 0))
         draw = ImageDraw.Draw(bbox_layer)
         bbox = draw.textbbox(xy=(0, 0), text=text, font=font, **text_bbox_optional_kwargs)
 
         text_dimensions = (bbox[2] - bbox[0], bbox[3] - bbox[1])
-        adjusted_text_position = (-bbox[0], -bbox[1])
+        text_layer_position = (-bbox[0], -bbox[1])
 
+        # Draw text onto a separate layer first, so it can be manipulated before applying it to the destination
         text_layer = Image.new("RGBA", text_dimensions)
         draw = ImageDraw.Draw(text_layer)
-        draw.text(adjusted_text_position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
+        draw.text(text_layer_position, text=text, fill=fill, font=font, **draw_text_optional_kwargs)
 
         text_layer = CardFaceMethods.manipulate_image(
             text_layer,
             **CardFaceMethods.unpack_manipulate_image_kwargs(step, card_face)
         )
 
+        # Must be calculated *after* image manipulation, to work from accurate dimensions
         if is_position_centre:
             position = Methods.reposition_centre_to_topleft(position, text_layer)
-        paste_box = (
-            position[0],
-            position[1],
-            position[0] + text_layer.size[0],
-            position[1] + text_layer.size[1]
-        )
 
-        compatibility_layer = Image.new("RGBA", image.size)
-        compatibility_layer.paste(text_layer, CardFaceMethods.ensure_ints(paste_box))
-
-        image = Image.alpha_composite(image, compatibility_layer)
+        image.alpha_composite(text_layer, CardFaceMethods.ensure_ints(position))
         return image
 
     @staticmethod
